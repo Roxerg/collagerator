@@ -121,7 +121,11 @@ class CustomClient(discord.Client):
         res = responses[0].json()
 
         try:
-            top_albums = [ album["image"][3]["#text"] for album in res["topalbums"]["album"] ]
+            top_albums = [ album["image"][2]["#text"] for album in res["topalbums"]["album"] ]
+            if len(top_albums) != len(res["topalbums"]["album"]):
+                response = "huh i couldn't grab all the images i needed"
+                await message.channel.send(response)
+
         except:
             response = "no albums found for user {} :pensive:".format(username)
             await message.channel.send(response)

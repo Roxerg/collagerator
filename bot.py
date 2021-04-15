@@ -120,14 +120,15 @@ class CustomClient(discord.Client):
         return res
     
     def get_cover(self, r):
-        res = None
-        try:
-            res = Image.open(BytesIO(r.content))
-        except:
-            res = Image.new(
+        res = Image.new(
                     mode = "RGB",
                     size = (174,174),
                     color=(0,0,0) )
+        try:
+            res = Image.open(BytesIO(r.content))
+        except:
+            pass
+        return res
 
     async def top_collage(self, username, period, message, dims="3x3"):
 

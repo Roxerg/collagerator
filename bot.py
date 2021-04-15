@@ -125,10 +125,18 @@ class CustomClient(discord.Client):
         except:
             response = "no albums found for user {} :pensive:".format(username)
             await message.channel.send(response)
+            return
 
         if len(top_albums) == 0:
             response = "no albums found for user {} :pensive:".format(username)
             await message.channel.send(response)
+            return
+
+        if by_x + by_y > len(top_albums):
+            response = "you don't have enough albums in that period for a {}x{} collage, bucko".format(by_x, by_y)
+            await message.channel.send(response)
+            return
+
         
         rqs = (grequests.get(album) for album in top_albums)
         responses = grequests.map(rqs)    

@@ -13,6 +13,7 @@ from PIL import Image
 from io import BytesIO
 
 import re
+from urllib.parse import quote_plus
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -43,6 +44,12 @@ class CustomClient(discord.Client):
         return response
 
 
+    def validate(self, command, username, period):
+        
+        username = quote_plus(username)
+
+        return command, username, period
+
     async def on_message(self, message):
         if message.author == self.user:
             return
@@ -62,7 +69,11 @@ class CustomClient(discord.Client):
             await message.channel.send(self.error_msg())
             return
 
+        
         period = words[3] if len(words) > 3 else "7day"
+
+        # make URL safe
+        command, username, period = self.validate(command, username, period)
 
         if period not in self.intervals:
             if period == "month":

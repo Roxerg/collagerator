@@ -136,7 +136,7 @@ class CustomClient(discord.Client):
             await message.channel.send(response)
             return
 
-        if by_x + by_y > len(top_albums):
+        if by_x * by_y > len(top_albums):
             response = "you don't have enough albums in that period for a {}x{} collage, bucko".format(by_x, by_y)
             await message.channel.send(response)
             return

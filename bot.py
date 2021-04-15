@@ -21,12 +21,6 @@ FM_API_KEY = os.getenv('LASTFM_API_KEY')
 
 
 
-#print(req)
-
-#print(res.json())
-
-
-
 class CustomClient(discord.Client):
 
     def __init__(self):
@@ -34,8 +28,7 @@ class CustomClient(discord.Client):
         self.BOT_CALL = "fmbot"
         self.query_albums = "https://ws.audioscrobbler.com/2.0/?method=user.gettopalbums&user={}&api_key={}&format=json&period={}&limit={}"
         self.intervals = ["overall", "7day", "1month", "3month",  "6month", "12month"]
-        self.commands  = ["list", "collage"]
-        self.karma = 0 
+        self.commands  = ["list", "collage", "<width>x<height>"]
 
     async def on_ready(self):
         print(f'{self.user} has connected to Discord!')
@@ -57,8 +50,7 @@ class CustomClient(discord.Client):
         words = message.content.split(" ")
 
         if self.BOT_CALL+"++" in message.content or self.BOT_CALL+" ++" in message.content:
-            self.karma += 1
-            await message.channel.send("OwO wot's dis? I haz {} kawmas now >w<".format(self.karma))
+            await message.channel.send("OwO wot's dis? thanx for kawmas >w<")
             return 
 
         if words[0] != self.BOT_CALL:
@@ -67,14 +59,8 @@ class CustomClient(discord.Client):
         try:
             command,username = words[1:3]
         except:
-            print("user/command failed")
             await message.channel.send(self.error_msg())
             return
-
-        #if len(words) > 3:
-        #    period = words[3]
-        #else:
-        #    period = "7day"
 
         period = words[3] if len(words) > 3 else "7day"
 

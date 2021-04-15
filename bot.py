@@ -111,6 +111,24 @@ class CustomClient(discord.Client):
         response = "{} top albums are:\n{}".format(username, "\n".join(top_albums))
         await message.channel.send(response)
 
+    def get_cover_link(self, album):
+        res = None
+        try:
+            res = album["image"][2]["#text"]
+        except:
+            res = ""
+        return res
+    
+    def get_cover(self, r):
+        res = None
+        try:
+            res = Image.open(BytesIO(r.content))
+        except:
+            res = Image.new(
+                    mode = "RGB",
+                    size = (174,174),
+                    color=(0,0,0) )
+
     async def top_collage(self, username, period, message, dims="3x3"):
 
         by_x, by_y = [int(x) for x in dims.split("x")]
@@ -121,7 +139,7 @@ class CustomClient(discord.Client):
         res = responses[0].json()
 
         try:
-            top_albums = [ album["image"][2]["#text"] for album in res["topalbums"]["album"] ]
+            top_albums = [ self.get_cover_link(album) for album in res["topalbums"]["album"] ]
             if len(top_albums) != len(res["topalbums"]["album"]):
                 response = "huh i couldn't grab all the images i needed"
                 await message.channel.send(response)
@@ -145,7 +163,7 @@ class CustomClient(discord.Client):
         rqs = (grequests.get(album) for album in top_albums)
         responses = grequests.map(rqs)    
         
-        images = [Image.open(BytesIO(r.content)) for r in responses]
+        images = [self.get_cover(r) for r in responses]
 
         width, height = images[0].size
 

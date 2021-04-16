@@ -48,11 +48,12 @@ class CustomClient(discord.Client):
         return response
 
     def help_msg(self):
-        response = "Command format:\n`{} <command> <last.fm username> <period>`\ncommands can be: {}\nperiod can be: {}\n(you can leave out username to use Discord username)" \
+        response = "Command format:\n`{} <command> <last.fm username> <period>`\ncommands can be: `{}`\nperiod can be: `{}`\n(`period` and `username` are optional)" \
                         .format(
                             self.BOT_CALL, 
                             " | ".join(self.commands),
-                            " | ".join(self.intervals))"
+                            " | ".join(self.intervals))
+        return response
 
 
     def validate(self, command, username, period):
@@ -78,7 +79,7 @@ class CustomClient(discord.Client):
             return        
 
         if words[1] == "help":
-             await message.channel.send(self.help_msg())
+            await message.channel.send(self.help_msg())
             return    
 
     
@@ -86,12 +87,13 @@ class CustomClient(discord.Client):
             command,username = words[1:3]
             if username in self.intervals:
                 period = username
-                username, _ = message.author.split("#")
+                username, _ = message.author.name
         except:
             print("No username?")
             print("Try using: " + message.author.name)
             try:
-                command = words[1:2]
+                command = words[1:2][0]
+                username = message.author.name
                 print("username is: " + message.author.name)
             except:
                 await message.channel.send(self.error_msg())

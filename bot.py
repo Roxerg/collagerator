@@ -44,8 +44,15 @@ class CustomClient(discord.Client):
             f'{guild.name}(id: {guild.id})')
 
     def error_msg(self):
-        response = "Something went wrong. Command format is:\n`{} <command> <last.fm username> <period>`\ncommands can be: {}\nperiod can be: {}".format(self.BOT_CALL, " | ".join(self.commands)," | ".join(self.intervals))
+        response = "Something went wrong. type `{} help` for instructions.".format(self.BOT_CALL)
         return response
+
+    def help_msg(self):
+        response = "Command format:\n`{} <command> <last.fm username> <period>`\ncommands can be: {}\nperiod can be: {}\n(you can leave out username to use Discord username)" \
+                        .format(
+                            self.BOT_CALL, 
+                            " | ".join(self.commands),
+                            " | ".join(self.intervals))"
 
 
     def validate(self, command, username, period):
@@ -69,6 +76,11 @@ class CustomClient(discord.Client):
 
         if words[0] != self.BOT_CALL:
             return        
+
+        if words[1] == "help":
+             await message.channel.send(self.help_msg())
+            return    
+
     
         try:
             command,username = words[1:3]

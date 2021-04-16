@@ -76,9 +76,12 @@ class CustomClient(discord.Client):
                 period = username
                 username, _ = message.author.split("#")
         except:
+            print("No username?")
+            print("Try using: " + message.author.split("#")[0])
             try:
                 command = words[1:2]
                 username, _ = message.author.split("#")
+                print("username is: " + username)
             except:
                 await message.channel.send(self.error_msg())
                 return    

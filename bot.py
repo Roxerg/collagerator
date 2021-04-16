@@ -27,9 +27,13 @@ class CustomClient(discord.Client):
     def __init__(self):
         super().__init__()
         self.BOT_CALL = "fmbot"
-        self.query_albums = "https://ws.audioscrobbler.com/2.0/?method=user.gettopalbums&user={}&api_key={}&format=json&period={}&limit={}"
+        
+        self.query_tracks = "https://ws.audioscrobbler.com/2.0/?method=user.gettoptracks&user={}&api_key={}&format=json&period={}&limit={}"
+        self.query_albums  = "https://ws.audioscrobbler.com/2.0/?method=user.gettopalbums&user={}&api_key={}&format=json&period={}&limit={}"
+        self.query_artists = "https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user={}&api_key={}&format=json&period={}&limit={}"
+        
         self.intervals = ["overall", "7day", "1month", "3month",  "6month", "12month"]
-        self.commands  = ["list", "collage", "<width>x<height>"]
+        self.commands  = ["artists", "albums", "tracks", "collage", "<width>x<height>"]
 
     async def on_ready(self):
         print(f'{self.user} has connected to Discord!')
@@ -51,6 +55,9 @@ class CustomClient(discord.Client):
         return command, username, period
 
     async def on_message(self, message):
+
+        period = None
+
         if message.author == self.user:
             return
         
@@ -65,12 +72,20 @@ class CustomClient(discord.Client):
     
         try:
             command,username = words[1:3]
+            if username in self.intervals:
+                period = username
+                username, _ = message.author.split("#")
         except:
-            await message.channel.send(self.error_msg())
-            return
+            try:
+                command = words[1:2]
+                username, _ = message.author.split("#")
+            except:
+                await message.channel.send(self.error_msg())
+                return    
 
-        
-        period = words[3] if len(words) > 3 else "7day"
+
+        if period == None:
+            period = words[3] if len(words) > 3 else "7day"
 
         # make URL safe
         command, username, period = self.validate(command, username, period)
@@ -85,8 +100,12 @@ class CustomClient(discord.Client):
                 await message.channel.send(self.error_msg())
                 return
 
-        if command == "list":
-            await self.top_list(username, period, message)
+        if command == "albums":
+            await self.top_list(username, period, message, thing="albums")
+        elif command == "artists":
+            await self.top_list(username, period, message, thing="artists")
+        elif command == "tracks":
+            await self.top_list(username, period, message, thing="tracks")
         elif command == "collage":
             await self.top_collage(username, period, message)
         elif re.match("^[0-9]x[0-9]$", command):
@@ -97,14 +116,33 @@ class CustomClient(discord.Client):
             return
         
 
-    async def top_list(self, username, period, message):
+    async def top_list(self, username, period, message, thing="albums"):
+        
+        if thing == "albums":
+            rqs = [ grequests.get(self.query_albums.format(username, FM_API_KEY, period, 6)) ]
+        elif thing == "artists":
+            rqs = [ grequests.get(self.query_artists.format(username, FM_API_KEY, period, 6)) ]
+        else: 
+            rqs = [ grequests.get(self.query_tracks.format(username, FM_API_KEY, period, 6)) ]
 
-        rqs = [ grequests.get(self.query_albums.format(username, FM_API_KEY, period, 6)) ]
         responses = grequests.map(rqs)
         res = responses[0].json()
 
         try:
-            top_albums = [ album["name"] for album in res["topalbums"]["album"] ][0:5]
+            if thing == "albums":
+                top_albums = [ "{} by {} ({} plays)".format(album["name"], album["artist"]["name"], album["playcount"])
+                                    for album in res["topalbums"]["album"] ][0:5]
+            elif thing == "artists":
+                top_albums = [ "{} ({} plays)".format(album["name"], album["playcount"])
+                                    for album in res["topartists"]["artist"] ][0:5]
+            else:
+                top_albums = [ "{} by {} ({}:{}) ({} plays)".format(
+                                album["name"], 
+                                album["artist"]["name"], 
+                                int(int(album["duration"])/60),
+                                int(int(album["duration"])%60),
+                                album["playcount"])
+                                    for album in res["toptracks"]["track"] ][0:5]
         except:
             response = "no albums found for user {} :pensive:".format(username)
             await message.channel.send(response)
@@ -119,7 +157,7 @@ class CustomClient(discord.Client):
         else:
             username = username + "'s"
 
-        response = "{} top albums are:\n{}".format(username, "\n".join(top_albums))
+        response = "{} top {} are:\n{}".format(username, thing, "\n".join(top_albums))
         await message.channel.send(response)
 
     def get_cover_link(self, album):

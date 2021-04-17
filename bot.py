@@ -346,6 +346,7 @@ async def _ping(ctx): # Defines a new "context" (ctx) command called "ping."
                )
              ])
 async def _collage(ctx, username="", dimensions="3x3", period="7day"):
+    await ctx.respond()
     username=str(username)
     
     if username == "":
@@ -360,4 +361,4 @@ async def _collage(ctx, username="", dimensions="3x3", period="7day"):
 
     pass
 
-client.run(TOKEN)
+#client.run(TOKEN)

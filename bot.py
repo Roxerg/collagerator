@@ -2,6 +2,8 @@
 import os
 
 import discord
+from discord_slash import SlashCommand
+
 from dotenv import load_dotenv
 
 import json
@@ -19,12 +21,14 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
 FM_API_KEY = os.getenv('LASTFM_API_KEY')
+APP_ID = os.getenv('APP_ID')
 
 
 
 class CustomClient(discord.Client):
 
     def __init__(self):
+        slash = SlashCommand(client, sync_commands=True)
         super().__init__()
         self.BOT_CALL = "fmbot"
         
@@ -255,4 +259,15 @@ class CustomClient(discord.Client):
 
 
 client = CustomClient()
+slash = SlashCommand(client, sync_commands=True)
+
+guild_ids = [
+    "315277951597936640"
+]
+
+
+@slash.slash(name="ping", guild_ids=guild_ids)
+async def _ping(ctx): # Defines a new "context" (ctx) command called "ping."
+    await ctx.send(f"Pong! ({client.latency*1000}ms)")
+
 client.run(TOKEN)

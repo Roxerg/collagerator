@@ -3,6 +3,7 @@ import os
 
 import discord
 from discord_slash import SlashCommand
+from discord_slash.utils.manage_commands import create_option, create_choice
 
 from dotenv import load_dotenv
 
@@ -16,6 +17,7 @@ from io import BytesIO
 
 import re
 from urllib.parse import quote_plus
+
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -120,20 +122,24 @@ class CustomClient(discord.Client):
                 return
 
         if command == "albums":
-            await self.top_list(username, period, message, thing="albums")
+            re_type, response = await self.top_list(username, period, message, thing="albums")
         elif command == "artists":
-            await self.top_list(username, period, message, thing="artists")
+            re_type, response = await self.top_list(username, period, message, thing="artists")
         elif command == "tracks":
-            await self.top_list(username, period, message, thing="tracks")
+            re_type, response = await self.top_list(username, period, message, thing="tracks")
         elif command == "collage":
-            await self.top_collage(username, period, message)
+            re_type, response = await self.top_collage(username, period, message)
         elif re.match("^[0-9]x[0-9]$", command):
-            await self.top_collage(username, period, message, dims=command)
+            re_type, response = await self.top_collage(username, period, message, dims=command)
         else:
             print("command failed")
             await message.channel.send(self.error_msg())
             return
-        
+
+        if re_type == 0:
+            message.channel.send(response)
+        elif re_type == 1:
+            message.channel.send(file=discord.File(fp=response, filename='image.png'))
 
     def duration_helper(self, duration):
         
@@ -178,11 +184,13 @@ class CustomClient(discord.Client):
                                     for album in res["toptracks"]["track"] ][0:5]
         except:
             response = "no albums found for user {} :pensive:".format(username)
-            await message.channel.send(response)
+            #await message.channel.send(response)
+            return 0, response
 
         if len(top_albums) == 0:
             response = "no albums found for user {} :pensive:".format(username)
-            await message.channel.send(response)
+            #await message.channel.send(response)
+            return 0, response
 
         
         if username[-1] == "s":
@@ -191,7 +199,8 @@ class CustomClient(discord.Client):
             username = username + "'s"
 
         response = "{} top {} are:\n{}".format(username, thing, "\n".join(top_albums))
-        await message.channel.send(response)
+        #await message.channel.send(response)
+        return 0, response
 
     def get_cover_link(self, album):
         res = None
@@ -225,22 +234,23 @@ class CustomClient(discord.Client):
             top_albums = [ self.get_cover_link(album) for album in res["topalbums"]["album"] ]
             if len(top_albums) != len(res["topalbums"]["album"]):
                 response = "huh i couldn't grab all the images i needed"
-                await message.channel.send(response)
+                #await message.channel.send(response)
+                return 0, response
 
         except:
             response = "no albums found for user {} :pensive:".format(username)
-            await message.channel.send(response)
-            return
+            #await message.channel.send(response)
+            return 0, response
 
         if len(top_albums) == 0:
             response = "no albums found for user {} :pensive:".format(username)
-            await message.channel.send(response)
-            return
+            #await message.channel.send(response)
+            return 0, response
 
         if by_x * by_y > len(top_albums):
             response = "you don't have enough albums in that period for a {}x{} collage, bucko".format(by_x, by_y)
-            await message.channel.send(response)
-            return
+            #await message.channel.send(response)
+            return 0, response
 
         
         rqs = (grequests.get(album) for album in top_albums)
@@ -267,7 +277,8 @@ class CustomClient(discord.Client):
         with BytesIO() as image_binary:
             final.save(image_binary, 'PNG')
             image_binary.seek(0)
-            await message.channel.send(file=discord.File(fp=image_binary, filename='image.png'))
+            #await message.channel.send(file=discord.File(fp=image_binary, filename='image.png'))
+            return 1, image_binary
 
 
 
@@ -275,7 +286,7 @@ client = CustomClient()
 slash = SlashCommand(client, sync_commands=True)
 
 guild_ids = [
-    "315277951597936640"
+    315277951597936640
 ]
 
 
@@ -283,5 +294,58 @@ guild_ids = [
 async def _ping(ctx): # Defines a new "context" (ctx) command called "ping."
     print("received!")
     await ctx.send(f"Pong! ({client.latency*1000}ms)")
+
+
+@slash.slash(name="collage",
+             description="Generates a collage out of your most listened album covers!",
+             options=[
+                create_option(
+                 name="username",
+                 description="Last.fm username. Defaults to Discord username.",
+                 option_type=3,
+                 required=False
+               ),
+               create_option(
+                 name="dimensions",
+                 description="format: <width>x<height>. goes up to 9x9. defaults to 3x3",
+                 option_type=3,
+                 required=False
+               ),
+               create_option(
+                 name="period",
+                 description="Data from what period of time. If nothing chosen, defaults to week",
+                 option_type=3,
+                 required=False,
+                 choices=[
+                  create_choice(
+                    name="week",
+                    value="7day"
+                  ),
+                  create_choice(
+                    name="month",
+                    value="1month"
+                  ),
+                  create_choice(
+                    name="3month",
+                    value="3month"
+                  ),
+                  create_choice(
+                    name="6month",
+                    value="6month"
+                  ),
+                  create_choice(
+                    name="year",
+                    value="12month"
+                  ),
+                  create_choice(
+                    name="overall",
+                    value="overall"
+                  )
+                ]
+               )
+             ])
+async def _collage(ctx, username: str):
+    print(username)
+    pass
 
 #client.run(TOKEN)

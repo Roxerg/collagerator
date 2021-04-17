@@ -156,11 +156,14 @@ class CustomClient(discord.Client):
                 top_albums = [ "{} ({} plays)".format(album["name"], album["playcount"])
                                     for album in res["topartists"]["artist"] ][0:5]
             else:
+                mins = str(int(int(album["duration"])/60))
+                secs = str(int(int(album["duration"])%60))
+
                 top_albums = [ "{} by {} ({}:{}) ({} plays)".format(
                                 album["name"], 
                                 album["artist"]["name"], 
-                                int(int(album["duration"])/60),
-                                int(int(album["duration"])%60),
+                                "0"*(2-len(mins))+mins,
+                                "0"*(2-len(secs))+secs,
                                 album["playcount"])
                                     for album in res["toptracks"]["track"] ][0:5]
         except:

@@ -1,5 +1,7 @@
-grequests==0.6.0
+requests==2.25.1
 discord.py==1.7.1
+grequests==0.6.0
+discord_py_slash_command==1.1.2
 discord==1.0.1
 Pillow==8.2.0
 python-dotenv==0.17.0

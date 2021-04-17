@@ -21,11 +21,9 @@ from urllib.parse import quote_plus
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
-GUILD = os.getenv('DISCORD_GUILD')
 FM_API_KEY = os.getenv('LASTFM_API_KEY')
 APP_ID = os.getenv('APP_ID')
-
-
+GUILDS = os.getenv("GUILDS")
 
 class CustomClient(discord.Client):
 
@@ -41,12 +39,8 @@ class CustomClient(discord.Client):
         self.commands  = ["artists", "albums", "tracks", "collage", "<width>x<height>"]
 
     async def on_ready(self):
-        print(f'{self.user} has connected to Discord!')
-        guild = discord.utils.get(self.guilds, name=GUILD)
-
-        print(
-            f'{self.user} is connected to the following guild:\n'
-            f'{guild.name}(id: {guild.id})')
+        print("f'{self.user} is up and running UwU")
+        
 
     def error_msg(self):
         response = "Something went wrong. type `{} help` for instructions.".format(self.BOT_CALL)
@@ -124,11 +118,11 @@ class CustomClient(discord.Client):
                 return
 
         if command == "albums":
-            re_type, response = await self.top_list(username, period, message, thing="albums")
+            re_type, response = await self.top_list(username, period, thing="albums")
         elif command == "artists":
-            re_type, response = await self.top_list(username, period, message, thing="artists")
+            re_type, response = await self.top_list(username, period, thing="artists")
         elif command == "tracks":
-            re_type, response = await self.top_list(username, period, message, thing="tracks")
+            re_type, response = await self.top_list(username, period, thing="tracks")
         elif command == "collage":
             re_type, response = await self.top_collage(username, period)
         elif re.match("^[0-9]x[0-9]$", command):
@@ -158,14 +152,14 @@ class CustomClient(discord.Client):
 
 
 
-    async def top_list(self, username, period, thing="albums"):
+    async def top_list(self, username, period, thing="albums", limit=6):
         
         if thing == "albums":
-            rqs = [ grequests.get(self.query_albums.format(username, FM_API_KEY, period, 6)) ]
+            rqs = [ grequests.get(self.query_albums.format(username, FM_API_KEY, period, limit)) ]
         elif thing == "artists":
-            rqs = [ grequests.get(self.query_artists.format(username, FM_API_KEY, period, 6)) ]
+            rqs = [ grequests.get(self.query_artists.format(username, FM_API_KEY, period, limit)) ]
         else: 
-            rqs = [ grequests.get(self.query_tracks.format(username, FM_API_KEY, period, 6)) ]
+            rqs = [ grequests.get(self.query_tracks.format(username, FM_API_KEY, period, limit)) ]
 
         responses = grequests.map(rqs)
         res = responses[0].json()
@@ -288,7 +282,7 @@ class CustomClient(discord.Client):
 client = CustomClient()
 slash = SlashCommand(client, sync_commands=True)
 
-guild_ids = [int(guild) for guild in os.getenv["GUILDS"].split(",")]
+guild_ids = [int(guild) for guild in GUILDS.split(",")]
 
 
 @slash.slash(name="ping", guild_ids=guild_ids)

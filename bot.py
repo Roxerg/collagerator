@@ -59,10 +59,7 @@ async def _list(ctx, username="", period="7day", listof="albums"):
         await ctx.send(file=discord.File(fp=response, filename='image.png'))
 
 
-
-
-if __name__ == "__main__" : 
-    custom_client.run(TOKEN)
+custom_client.run(TOKEN)
 
 
 

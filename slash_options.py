@@ -62,3 +62,9 @@ ListOption = create_option(
                     value="albums"
                   )
                 ])
+CountOption = create_option(
+                 name="count",
+                 description="This one goes up to 11",
+                 option_type=3,
+                 required=False
+               )

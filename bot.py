@@ -44,14 +44,16 @@ async def _collage(ctx, username="", dimensions="3x3", period="7day"):
 @slash.slash(name="list", guild_ids=custom_client.GUILD_IDS,
              description="Generates a collage out of your most listened album covers!",
              options=[ UsernameOption, ListOption, PeriodOption ])
-async def _list(ctx, username="", period="7day", listof="albums"):
+async def _list(ctx, username="", period="7day", listof="albums", count=5):
     await ctx.defer() # we do a little ACK so we have time to fetch stats
     username=str(username)
     
     if username == "":
         username = ctx.author.name
 
-    re_type, response = await custom_client.top_list(username, period, thing=listof)
+    count = int(count) if int(count) <= 11 else 11
+
+    re_type, response = await custom_client.top_list(username, period, thing=listof, limit=count)
 
     if re_type == 0:
         await ctx.send(response)

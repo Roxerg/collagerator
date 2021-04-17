@@ -20,7 +20,10 @@ class CustomClient(discord.Client):
         self.BOT_CALL = "fmbot"
 
         self.GUILD_IDS = [guild.id for guild in self.guilds]
-        
+        print("Guilds Connected:")
+        print([guild.name for guild in self.guilds])
+        print(self.GUILD_IDS)
+
         self.query_tracks = "https://ws.audioscrobbler.com/2.0/?method=user.gettoptracks&user={}&api_key={}&format=json&period={}&limit={}"
         self.query_albums  = "https://ws.audioscrobbler.com/2.0/?method=user.gettopalbums&user={}&api_key={}&format=json&period={}&limit={}"
         self.query_artists = "https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user={}&api_key={}&format=json&period={}&limit={}"

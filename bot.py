@@ -128,18 +128,18 @@ class CustomClient(discord.Client):
         elif command == "tracks":
             re_type, response = await self.top_list(username, period, message, thing="tracks")
         elif command == "collage":
-            re_type, response = await self.top_collage(username, period, message)
+            re_type, response = await self.top_collage(username, period)
         elif re.match("^[0-9]x[0-9]$", command):
-            re_type, response = await self.top_collage(username, period, message, dims=command)
+            re_type, response = await self.top_collage(username, period, dims=command)
         else:
             print("command failed")
             await message.channel.send(self.error_msg())
             return
 
         if re_type == 0:
-            message.channel.send(response)
+            await message.channel.send(response)
         elif re_type == 1:
-            message.channel.send(file=discord.File(fp=response, filename='image.png'))
+            await message.channel.send(file=discord.File(fp=response, filename='image.png'))
 
     def duration_helper(self, duration):
         
@@ -221,7 +221,7 @@ class CustomClient(discord.Client):
             pass
         return res
 
-    async def top_collage(self, username, period, message, dims="3x3"):
+    async def top_collage(self, username, period, dims="3x3"):
 
         by_x, by_y = [int(x) for x in dims.split("x")]
 
@@ -274,11 +274,12 @@ class CustomClient(discord.Client):
 
         final = canvas
 
-        with BytesIO() as image_binary:
-            final.save(image_binary, 'PNG')
-            image_binary.seek(0)
-            #await message.channel.send(file=discord.File(fp=image_binary, filename='image.png'))
-            return 1, image_binary
+        #with BytesIO() as image_binary:
+        image_binary = BytesIO()
+        final.save(image_binary, 'PNG')
+        image_binary.seek(0)
+        #await message.channel.send(file=discord.File(fp=image_binary, filename='image.png'))
+        return 1, image_binary
 
 
 
@@ -296,7 +297,7 @@ async def _ping(ctx): # Defines a new "context" (ctx) command called "ping."
     await ctx.send(f"Pong! ({client.latency*1000}ms)")
 
 
-@slash.slash(name="collage",
+@slash.slash(name="collage", guild_ids=guild_ids,
              description="Generates a collage out of your most listened album covers!",
              options=[
                 create_option(
@@ -344,8 +345,19 @@ async def _ping(ctx): # Defines a new "context" (ctx) command called "ping."
                 ]
                )
              ])
-async def _collage(ctx, username: str):
-    print(username)
+async def _collage(ctx, username="", dimensions="3x3", period="7day"):
+    username=str(username)
+    
+    if username == "":
+        username = ctx.author.name
+
+    re_type, response = await client.top_collage(username, period, dims=dimensions)
+
+    if re_type == 0:
+        await ctx.send(response)
+    elif re_type == 1:
+        await ctx.send(file=discord.File(fp=response, filename='image.png'))
+
     pass
 
-#client.run(TOKEN)
+client.run(TOKEN)

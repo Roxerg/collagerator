@@ -17,17 +17,17 @@ from slash_options import ListOption
 slash = SlashCommand(custom_client, sync_commands=True)
 
 
-@slash.slash(name="ping", guild_ids=GUILD_IDS)
+@slash.slash(name="ping", guild_ids=custom_client.GUILD_IDS)
 async def _ping(ctx):
     print("received!")
     await ctx.send(f"Pong! ({custom_client.latency*1000}ms)")
 
 
-@slash.slash(name="collage", guild_ids=GUILD_IDS,
+@slash.slash(name="collage", guild_ids=custom_client.GUILD_IDS,
              description="Generates a collage out of your most listened album covers!",
              options=[ UsernameOption, DimensionsOption, PeriodOption ])
 async def _collage(ctx, username="", dimensions="3x3", period="7day"):
-    await ctx.defer()
+    await ctx.defer() # we do a little ACK so we have time to fetch stats
     username=str(username)
     
     if username == "":
@@ -41,11 +41,11 @@ async def _collage(ctx, username="", dimensions="3x3", period="7day"):
         await ctx.send(file=discord.File(fp=response, filename='image.png'))
 
 
-@slash.slash(name="list", guild_ids=GUILD_IDS,
+@slash.slash(name="list", guild_ids=custom_client.GUILD_IDS,
              description="Generates a collage out of your most listened album covers!",
              options=[ UsernameOption, ListOption, PeriodOption ])
 async def _list(ctx, username="", period="7day", listof="albums"):
-    await ctx.defer()
+    await ctx.defer() # we do a little ACK so we have time to fetch stats
     username=str(username)
     
     if username == "":

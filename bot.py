@@ -28,7 +28,6 @@ APP_ID = os.getenv('APP_ID')
 class CustomClient(discord.Client):
 
     def __init__(self):
-        slash = SlashCommand(client, sync_commands=True)
         super().__init__()
         self.BOT_CALL = "fmbot"
         
@@ -136,6 +135,21 @@ class CustomClient(discord.Client):
             return
         
 
+    def duration_helper(self, duration):
+        
+        if int(duration) == 0:
+            return ""
+
+        mins = str(int(int(duration)/60))
+        secs = str(int(int(duration)%60))
+
+        mins = "0"*(2-len(mins))+mins
+        secs = "0"*(2-len(secs))+secs
+
+        return "({}:{})".format(mins,secs)
+
+
+
     async def top_list(self, username, period, message, thing="albums"):
         
         if thing == "albums":
@@ -156,14 +170,10 @@ class CustomClient(discord.Client):
                 top_albums = [ "{} ({} plays)".format(album["name"], album["playcount"])
                                     for album in res["topartists"]["artist"] ][0:5]
             else:
-                mins = str(int(int(album["duration"])/60))
-                secs = str(int(int(album["duration"])%60))
-
-                top_albums = [ "{} by {} ({}:{}) ({} plays)".format(
+                top_albums = [ "{} by {} {} ({} plays)".format(
                                 album["name"], 
                                 album["artist"]["name"], 
-                                "0"*(2-len(mins))+mins,
-                                "0"*(2-len(secs))+secs,
+                                self.duration_helper(album["duration"]),
                                 album["playcount"])
                                     for album in res["toptracks"]["track"] ][0:5]
         except:

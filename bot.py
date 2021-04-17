@@ -116,6 +116,8 @@ class CustomClient(discord.Client):
                 period = "1month"
             elif period == "week":
                 period = "7day"
+            elif period == "year":
+                period = "12month"
             else:
                 print("period failed")
                 await message.channel.send(self.error_msg())
@@ -156,7 +158,7 @@ class CustomClient(discord.Client):
 
 
 
-    async def top_list(self, username, period, message, thing="albums"):
+    async def top_list(self, username, period, thing="albums"):
         
         if thing == "albums":
             rqs = [ grequests.get(self.query_albums.format(username, FM_API_KEY, period, 6)) ]
@@ -286,9 +288,7 @@ class CustomClient(discord.Client):
 client = CustomClient()
 slash = SlashCommand(client, sync_commands=True)
 
-guild_ids = [
-    315277951597936640
-]
+guild_ids = [int(guild) for guild in os.getenv["GUILDS"].split(",")]
 
 
 @slash.slash(name="ping", guild_ids=guild_ids)
@@ -296,23 +296,19 @@ async def _ping(ctx): # Defines a new "context" (ctx) command called "ping."
     print("received!")
     await ctx.send(f"Pong! ({client.latency*1000}ms)")
 
-
-@slash.slash(name="collage", guild_ids=guild_ids,
-             description="Generates a collage out of your most listened album covers!",
-             options=[
-                create_option(
+UsernameOption = create_option(
                  name="username",
                  description="Last.fm username. Defaults to Discord username.",
                  option_type=3,
                  required=False
-               ),
-               create_option(
+               )
+DimensionsOption = create_option(
                  name="dimensions",
                  description="format: <width>x<height>. goes up to 9x9. defaults to 3x3",
                  option_type=3,
                  required=False
-               ),
-               create_option(
+               )
+PeriodOption = create_option(
                  name="period",
                  description="Data from what period of time. If nothing chosen, defaults to week",
                  option_type=3,
@@ -342,8 +338,34 @@ async def _ping(ctx): # Defines a new "context" (ctx) command called "ping."
                     name="overall",
                     value="overall"
                   )
-                ]
-               )
+                ])
+ListOption = create_option(
+                 name="listof",
+                 description="You can list top: artists, albums, or tracks. defaults to albums",
+                 option_type=3,
+                 required=False,
+                 choices=[
+                  create_choice(
+                    name="artists",
+                    value="artists"
+                  ),
+                  create_choice(
+                    name="tracks",
+                    value="tracks"
+                  ),
+                  create_choice(
+                    name="albums",
+                    value="albums"
+                  )
+                ])
+
+
+@slash.slash(name="collage", guild_ids=guild_ids,
+             description="Generates a collage out of your most listened album covers!",
+             options=[
+                UsernameOption,
+                DimensionsOption,
+                PeriodOption
              ])
 async def _collage(ctx, username="", dimensions="3x3", period="7day"):
     await ctx.defer()
@@ -353,6 +375,30 @@ async def _collage(ctx, username="", dimensions="3x3", period="7day"):
         username = ctx.author.name
 
     re_type, response = await client.top_collage(username, period, dims=dimensions)
+
+    if re_type == 0:
+        await ctx.send(response)
+    elif re_type == 1:
+        await ctx.send(file=discord.File(fp=response, filename='image.png'))
+
+    pass
+
+
+@slash.slash(name="list", guild_ids=guild_ids,
+             description="Generates a collage out of your most listened album covers!",
+             options=[
+                UsernameOption,
+                ListOption,
+                PeriodOption
+             ])
+async def _list(ctx, username="", period="7day", listof="albums"):
+    await ctx.defer()
+    username=str(username)
+    
+    if username == "":
+        username = ctx.author.name
+
+    re_type, response = await client.top_list(username, period, thing=listof)
 
     if re_type == 0:
         await ctx.send(response)

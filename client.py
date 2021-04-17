@@ -11,6 +11,7 @@ from io import BytesIO
 import env_vars
 
 from env_vars import FM_API_KEY
+from env_vars import GUILD_IDS
 
 class CustomClient(discord.Client):
 
@@ -19,7 +20,7 @@ class CustomClient(discord.Client):
         
         self.BOT_CALL = "fmbot"
 
-        
+        self.GUILD_IDS = GUILD_IDS
 
         self.query_tracks = "https://ws.audioscrobbler.com/2.0/?method=user.gettoptracks&user={}&api_key={}&format=json&period={}&limit={}"
         self.query_albums  = "https://ws.audioscrobbler.com/2.0/?method=user.gettopalbums&user={}&api_key={}&format=json&period={}&limit={}"

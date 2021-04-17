@@ -281,6 +281,7 @@ guild_ids = [
 
 @slash.slash(name="ping", guild_ids=guild_ids)
 async def _ping(ctx): # Defines a new "context" (ctx) command called "ping."
+    print("received!")
     await ctx.send(f"Pong! ({client.latency*1000}ms)")
 
 client.run(TOKEN)

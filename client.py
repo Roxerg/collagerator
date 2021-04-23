@@ -161,17 +161,17 @@ class CustomClient(discord.Client):
         try:
             if thing == "albums":
                 top_albums = [ "{} by {} ({} plays)".format(album["name"], album["artist"]["name"], album["playcount"])
-                                    for album in res["topalbums"]["album"] ][0:5]
+                                    for album in res["topalbums"]["album"] ][0:limit]
             elif thing == "artists":
                 top_albums = [ "{} ({} plays)".format(album["name"], album["playcount"])
-                                    for album in res["topartists"]["artist"] ][0:5]
+                                    for album in res["topartists"]["artist"] ][0:limit]
             else:
                 top_albums = [ "{} by {} {} ({} plays)".format(
                                 album["name"], 
                                 album["artist"]["name"], 
                                 self.duration_helper(album["duration"]),
                                 album["playcount"])
-                                    for album in res["toptracks"]["track"] ][0:5]
+                                    for album in res["toptracks"]["track"] ][0:limit]
         except:
             response = "no albums found for user {} :pensive:".format(username)
             #await message.channel.send(response)

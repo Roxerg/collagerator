@@ -13,6 +13,7 @@ from slash_options import UsernameOption
 from slash_options import DimensionsOption
 from slash_options import PeriodOption
 from slash_options import ListOption
+from slash_options import CountOption
 
 slash = SlashCommand(custom_client, sync_commands=True)
 
@@ -43,7 +44,7 @@ async def _collage(ctx, username="", dimensions="3x3", period="7day"):
 
 @slash.slash(name="list", guild_ids=custom_client.GUILD_IDS,
              description="Generates a collage out of your most listened album covers!",
-             options=[ UsernameOption, ListOption, PeriodOption ])
+             options=[ UsernameOption, ListOption, PeriodOption, CountOption ])
 async def _list(ctx, username="", period="7day", listof="albums", count=5):
     await ctx.defer() # we do a little ACK so we have time to fetch stats
     username=str(username)

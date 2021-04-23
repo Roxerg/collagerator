@@ -31,7 +31,8 @@ class CustomClient(discord.Client):
 
     async def on_ready(self):
         print("{} is up and running UwU".format(self.user))
-        self.GUILD_IDS = [guild.id for guild in self.guilds]
+        # doesn't seem to work
+        #self.GUILD_IDS = [guild.id for guild in self.guilds]
         print("Guilds Connected:")
         print([guild.name for guild in self.guilds])
         print(self.GUILD_IDS)

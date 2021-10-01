@@ -3,15 +3,21 @@ import re
 
 import grequests
 import discord
+import os
 
 from urllib.parse import quote_plus
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 
 import env_vars
 
 from env_vars import FM_API_KEY
 from env_vars import GUILD_IDS
+
+_font = ImageFont.load_default()
+
+_max_line_chars = 30
+_line_spacing = 10
 
 class CustomClient(discord.Client):
 
@@ -192,6 +198,12 @@ class CustomClient(discord.Client):
         #await message.channel.send(response)
         return 0, response
 
+    def get_meta(self, album): 
+        return {
+            "cover_url" : self.get_cover_link(album),
+            "info" : self.get_text_info(album)
+        }
+
     def get_cover_link(self, album):
         res = None
         try:
@@ -199,15 +211,68 @@ class CustomClient(discord.Client):
         except:
             res = ""
         return res
+
+    def get_text_info(self, album):
+        res = {
+            "artist" : '',
+            "album" : ''
+        }
+
+        try: 
+            res["artist"] = album["artist"]["name"]
+        except: 
+            pass
+
+        try: 
+            res["album"] = album["name"]
+        except: 
+            pass
+
+        return res
     
+    def format_image_text(self, img, album_info):
+        artist_words = album_info["artist"].split(' ')
+        album_words = album_info["album"].split(' ')
+
+        if (len(artist_words)>0):
+            artist_words.append('-')
+
+        all_words = artist_words + album_words
+        all_words.reverse()
+        all_words = list(map(lambda w: w+" ", all_words))
+        lines = []
+        current_line = 0
+        current_line = ""
+        while len(all_words) > 0:
+            print(current_line)
+            if len(current_line)+len(all_words[-1]) <= _max_line_chars:
+                current_line += all_words.pop()
+            else:
+                lines.append(current_line)
+                current_line = ""
+        lines.append(current_line) # mustn't forget the last one!
+
+        draw = ImageDraw.Draw(img)
+
+        offset = 0
+
+        for line in lines:
+            draw.text((0, offset),line, font=_font, fill=(255,255,255))
+            offset += _line_spacing
+
+
+
     def get_cover(self, r):
-        # returns all black square if image could not be loaded
+        # returns all black square with text if image could not be loaded
         res = Image.new(
                     mode = "RGB",
                     size = (174,174),
                     color=(0,0,0) )
+
+        self.format_image_text(res, r[1])
+
         try:
-            res = Image.open(BytesIO(r.content))
+            res = Image.open(BytesIO(r[0].content))
         except:
             pass
         return res
@@ -222,7 +287,7 @@ class CustomClient(discord.Client):
         res = responses[0].json()
 
         try:
-            top_albums = [ self.get_cover_link(album) for album in res["topalbums"]["album"] ]
+            top_albums = [ self.get_meta(album) for album in res["topalbums"]["album"] ]
             if len(top_albums) != len(res["topalbums"]["album"]):
                 response = "huh i couldn't grab all the images i needed"
                 #await message.channel.send(response)
@@ -244,10 +309,13 @@ class CustomClient(discord.Client):
             return 0, response
 
         
-        rqs = (grequests.get(album) for album in top_albums)
+        rqs = (grequests.get(album["cover_url"]) for album in top_albums)
         responses = grequests.map(rqs)    
+
+        # praying to god for same consistent order
+        full_data = zip(responses, map(lambda a: a["info"] ,top_albums))
         
-        images = [self.get_cover(r) for r in responses]
+        images = [self.get_cover(r) for r in full_data]
 
         width, height = images[0].size
 

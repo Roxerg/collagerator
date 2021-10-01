@@ -21,7 +21,7 @@ slash = SlashCommand(custom_client, sync_commands=True)
 @slash.slash(name="ping", guild_ids=custom_client.GUILD_IDS)
 async def _ping(ctx):
     print("received!")
-    await ctx.send(f"Pong! ({custom_client.latency*1000}ms)")
+    await ctx.send("Pong! ({}ms)".format(custom_client.latency*1000))
 
 
 @slash.slash(name="collage", guild_ids=custom_client.GUILD_IDS,

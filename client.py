@@ -9,8 +9,6 @@ from urllib.parse import quote_plus
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 
-import env_vars
-
 from env_vars import FM_API_KEY
 from env_vars import GUILD_IDS
 
@@ -21,10 +19,11 @@ _line_spacing = 10
 
 class CustomClient(discord.Client):
 
-    def __init__(self):
+    def __init__(self, logger):
         super().__init__()
         
         self.BOT_CALL = "fmbot"
+        self.log = logger
 
         self.GUILD_IDS = GUILD_IDS
 
@@ -37,8 +36,6 @@ class CustomClient(discord.Client):
 
     async def on_ready(self):
         print("{} is up and running UwU".format(self.user))
-        # doesn't seem to work
-        #self.GUILD_IDS = [guild.id for guild in self.guilds]
         print("Guilds Connected:")
         print([guild.name for guild in self.guilds])
         print(self.GUILD_IDS)
@@ -64,6 +61,8 @@ class CustomClient(discord.Client):
         return command, username, period
 
     async def on_message(self, message):
+
+        self.log.request_classic(message)
 
         period = None
 
@@ -344,4 +343,3 @@ class CustomClient(discord.Client):
         return 1, image_binary
 
 
-custom_client = CustomClient()

@@ -5,7 +5,7 @@ from discord_slash import SlashCommand
 import discord
 import logging
 
-from client import custom_client
+from client import CustomClient
 
 from env_vars import TOKEN
 from env_vars import GUILD_IDS
@@ -18,11 +18,10 @@ from slash_options import ListOption
 from slash_options import CountOption
 
 
-
-
-slash = SlashCommand(custom_client, sync_commands=True)
 log = LogService()
 
+custom_client = CustomClient(log)
+slash = SlashCommand(custom_client, sync_commands=True)
 
 @slash.slash(name="ping", guild_ids=custom_client.GUILD_IDS)
 async def _ping(ctx):
@@ -62,7 +61,9 @@ async def _list(ctx, username="", period="7day", listof="albums", count=5):
 
     count = int(count) if int(count) <= 11 else 11
 
+    log.request_slash(ctx, 'list', username, extras={'listof' : listof, 'period': period, 'count': count  })
     re_type, response = await custom_client.top_list(username, period, thing=listof, limit=count)
+    log.response('list', username, re_type, response)
 
     if re_type == 0:
         await ctx.send(response)

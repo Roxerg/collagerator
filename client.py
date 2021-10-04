@@ -14,7 +14,7 @@ import env_vars
 from env_vars import FM_API_KEY
 from env_vars import GUILD_IDS
 
-_font = ImageFont.load_default()
+_font = ImageFont.truetype(os.path.dirname(os.path.abspath(__file__))+'/fonts/RobotoMono-Regular.ttf', 10)
 
 _max_line_chars = 30
 _line_spacing = 10
@@ -180,10 +180,14 @@ class CustomClient(discord.Client):
                                     for album in res["toptracks"]["track"] ][0:limit]
         except:
             response = "no albums found for user {} :pensive:".format(username)
+            print(thing)
+            print(res)
             #await message.channel.send(response)
             return 0, response
 
         if len(top_albums) == 0:
+            print(thing)
+            print(res)
             response = "no albums found for user {} :pensive:".format(username)
             #await message.channel.send(response)
             return 0, response
@@ -244,7 +248,6 @@ class CustomClient(discord.Client):
         current_line = 0
         current_line = ""
         while len(all_words) > 0:
-            print(current_line)
             if len(current_line)+len(all_words[-1]) <= _max_line_chars:
                 current_line += all_words.pop()
             else:

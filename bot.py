@@ -3,11 +3,13 @@
 
 from discord_slash import SlashCommand
 import discord
+import logging
 
 from client import custom_client
 
 from env_vars import TOKEN
 from env_vars import GUILD_IDS
+from log_service import LogService
 
 from slash_options import UsernameOption
 from slash_options import DimensionsOption
@@ -15,7 +17,11 @@ from slash_options import PeriodOption
 from slash_options import ListOption
 from slash_options import CountOption
 
+
+
+
 slash = SlashCommand(custom_client, sync_commands=True)
+log = LogService()
 
 
 @slash.slash(name="ping", guild_ids=custom_client.GUILD_IDS)
@@ -34,7 +40,9 @@ async def _collage(ctx, username="", dimensions="3x3", period="7day"):
     if username == "":
         username = ctx.author.name
 
+    log.request_slash(ctx, 'collage', username, extras={'dimensions' : dimensions, "period": period })
     re_type, response = await custom_client.top_collage(username, period, dims=dimensions)
+    log.response('collage', username, re_type, response)
 
     if re_type == 0:
         await ctx.send(response)

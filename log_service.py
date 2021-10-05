@@ -43,20 +43,37 @@ class LogService:
             'count': count,
             'listof': listof,
         }
-
-    def request_slash(self, ctx, command, username, extras):
-
-        extra_params = self.build_extras(command=command, username=username, guild=ctx.author.guild)
-
+    def add_command_params(self, extra_params, extras):
+       
         if 'dimensions' in extras:
             extra_params['dimensions'] = extras['dimensions']
         if 'period' in extras:
             extra_params['period'] = extras['period']
 
+        return extra_params
+
+    def request_slash(self, ctx, command, username, extras):
+
+        extra_params = self.build_extras(command=command, username=username, guild=ctx.author.guild)
+
+        extra_params = self.add_command_params(extra_params, extras)
+
         self.requests_logger.info('REQ SLASH', extra=extra_params)
 
-    def request_classic(self, command, extra):
-        self.requests_logger.info('REQ CLASSIC')
+    def request_classic(self, command, username, extras):
+
+        extra_params = self.build_extras(
+            command=command,
+            username=username,
+        )
+
+        extra_params = self.add_command_params(extra_params, extras)
+
+        self.requests_logger.info('REQ CLASSIC', 
+        extra=extra_params,
+        
+        )
+
 
     def response(self, command, username, statuscode, response):
         self.requests_logger.info('RES', 

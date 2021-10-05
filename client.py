@@ -62,8 +62,7 @@ class CustomClient(discord.Client):
 
     async def on_message(self, message):
 
-        self.log.request_classic(message)
-
+        
         period = None
 
         if message.author == self.user:
@@ -77,6 +76,8 @@ class CustomClient(discord.Client):
 
         if words[0] != self.BOT_CALL:
             return        
+        
+        self.log.request_classic(message.content, message.author, {})
 
         if words[1] == "help":
             await message.channel.send(self.help_msg())

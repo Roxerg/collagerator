@@ -7,6 +7,7 @@ from env_vars import TOKEN
 
 client = discord.Client()
 
+
 @client.event
 async def on_ready():
     for guild in client.guilds:

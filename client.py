@@ -1,4 +1,7 @@
+from locale import strcoll
 import re
+from enum import Enum
+from typing import Any, BinaryIO, Dict, Tuple, TypedDict, Union
 
 import grequests
 import discord
@@ -11,12 +14,15 @@ from io import BytesIO
 from env_vars import FM_API_KEY
 from env_vars import GUILD_IDS
 
-_font = ImageFont.truetype(
-    os.path.dirname(os.path.abspath(__file__)) + "/fonts/RobotoMono-Regular.ttf", 10
-)
+from image_processing import ImageProcessor
+from utils import duration_helper
+from utils import get_meta
 
-_max_line_chars = 30
-_line_spacing = 10
+
+class BotResponseCode(Enum):
+    ERROR = -1
+    TEXT = 0
+    IMAGE = 1
 
 
 class CustomClient(discord.Client):
@@ -34,6 +40,8 @@ class CustomClient(discord.Client):
 
         self.intervals = ["overall", "7day", "1month", "3month", "6month", "12month"]
         self.commands = ["artists", "albums", "tracks", "collage", "<width>x<height>"]
+
+        self.imageProcessor = ImageProcessor()
 
     async def on_ready(self):
         print("{} is up and running UwU".format(self.user))
@@ -133,25 +141,14 @@ class CustomClient(discord.Client):
             await message.channel.send(self.error_msg())
             return
 
-        if re_type == 0:
+        if re_type == BotResponseCode.ERROR or re_type == BotResponseCode.TEXT:
             await message.channel.send(response)
-        elif re_type == 1:
+        elif re_type == BotResponseCode.IMAGE:
             await message.channel.send(
                 file=discord.File(fp=response, filename="image.png")
             )
 
-    def duration_helper(self, duration):
 
-        if int(duration) == 0:
-            return ""
-
-        mins = str(int(int(duration) / 60))
-        secs = str(int(int(duration) % 60))
-
-        mins = "0" * (2 - len(mins)) + mins
-        secs = "0" * (2 - len(secs)) + secs
-
-        return "({}:{})".format(mins, secs)
 
     async def top_list(self, username, period, thing="albums", limit=6):
 
@@ -195,7 +192,7 @@ class CustomClient(discord.Client):
                     "{} by {} {} ({} plays)".format(
                         album["name"],
                         album["artist"]["name"],
-                        self.duration_helper(album["duration"]),
+                        duration_helper(album["duration"]),
                         album["playcount"],
                     )
                     for album in res["toptracks"]["track"]
@@ -204,15 +201,13 @@ class CustomClient(discord.Client):
             response = "no albums found for user {} :pensive:".format(username)
             print(thing)
             print(res)
-            # await message.channel.send(response)
-            return 0, response
+            return BotResponseCode.ERROR, response
 
         if len(top_albums) == 0:
             print(thing)
             print(res)
             response = "no albums found for user {} :pensive:".format(username)
-            # await message.channel.send(response)
-            return 0, response
+            return BotResponseCode.ERROR, response
 
         if username[-1] == "s":
             username = username + "'"
@@ -220,78 +215,8 @@ class CustomClient(discord.Client):
             username = username + "'s"
 
         response = "{} top {} are:\n{}".format(username, thing, "\n".join(top_albums))
-        # await message.channel.send(response)
-        return 0, response
+        return BotResponseCode.TEXT, response
 
-    def get_meta(self, album):
-        return {
-            "cover_url": self.get_cover_link(album),
-            "info": self.get_text_info(album),
-        }
-
-    def get_cover_link(self, album):
-        res = None
-        try:
-            res = album["image"][2]["#text"]
-        except:
-            res = ""
-        return res
-
-    def get_text_info(self, album):
-        res = {"artist": "", "album": ""}
-
-        try:
-            res["artist"] = album["artist"]["name"]
-        except:
-            pass
-
-        try:
-            res["album"] = album["name"]
-        except:
-            pass
-
-        return res
-
-    def format_image_text(self, img, album_info):
-        artist_words = album_info["artist"].split(" ")
-        album_words = album_info["album"].split(" ")
-
-        if len(artist_words) > 0:
-            artist_words.append("-")
-
-        all_words = artist_words + album_words
-        all_words.reverse()
-        all_words = list(map(lambda w: w + " ", all_words))
-        lines = []
-        current_line = 0
-        current_line = ""
-        while len(all_words) > 0:
-            if len(current_line) + len(all_words[-1]) <= _max_line_chars:
-                current_line += all_words.pop()
-            else:
-                lines.append(current_line)
-                current_line = ""
-        lines.append(current_line)  # mustn't forget the last one!
-
-        draw = ImageDraw.Draw(img)
-
-        offset = 0
-
-        for line in lines:
-            draw.text((0, offset), line, font=_font, fill=(255, 255, 255))
-            offset += _line_spacing
-
-    def get_cover(self, r):
-        # returns all black square with text if image could not be loaded
-        res = Image.new(mode="RGB", size=(174, 174), color=(0, 0, 0))
-
-        self.format_image_text(res, r[1])
-
-        try:
-            res = Image.open(BytesIO(r[0].content))
-        except:
-            pass
-        return res
 
     async def top_collage(self, username, period, dims="3x3"):
 
@@ -306,52 +231,30 @@ class CustomClient(discord.Client):
         res = responses[0].json()
 
         try:
-            top_albums = [self.get_meta(album) for album in res["topalbums"]["album"]]
+            top_albums = [get_meta(album) for album in res["topalbums"]["album"]]
             if len(top_albums) != len(res["topalbums"]["album"]):
                 response = "huh i couldn't grab all the images i needed"
-                # await message.channel.send(response)
-                return 0, response
+                return BotResponseCode.ERROR, response
 
         except:
             response = "no albums found for user {} :pensive:".format(username)
-            # await message.channel.send(response)
-            return 0, response
+            return BotResponseCode.ERROR, response
 
         if len(top_albums) == 0:
             response = "no albums found for user {} :pensive:".format(username)
-            # await message.channel.send(response)
-            return 0, response
+            return BotResponseCode.ERROR, response
 
         if by_x * by_y > len(top_albums):
             response = "you don't have enough albums in that period for a {}x{} collage, bucko".format(
                 by_x, by_y
             )
-            # await message.channel.send(response)
-            return 0, response
+            return BotResponseCode.ERROR, response
 
         rqs = (grequests.get(album["cover_url"]) for album in top_albums)
         responses = grequests.map(rqs)
 
-        # praying to god for same consistent order
-        full_data = zip(responses, map(lambda a: a["info"], top_albums))
+        full_data = list(zip(responses, map(lambda a: a["info"], top_albums)))
 
-        images = [self.get_cover(r) for r in full_data]
+        image_binary = self.imageProcessor.generate_collage_binary(full_data, by_x, by_y)
 
-        width, height = images[0].size
-
-        canvas = Image.new(mode="RGB", size=(by_x * width, by_y * height))
-
-        i = 0
-        for y in range(0, by_y):
-            for x in range(0, by_x):
-                canvas.paste(images[i], (x * width, y * height))
-                i += 1
-
-        final = canvas
-
-        # with BytesIO() as image_binary:
-        image_binary = BytesIO()
-        final.save(image_binary, "PNG")
-        image_binary.seek(0)
-        # await message.channel.send(file=discord.File(fp=image_binary, filename='image.png'))
-        return 1, image_binary
+        return BotResponseCode.IMAGE, image_binary

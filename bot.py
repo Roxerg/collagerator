@@ -1,5 +1,5 @@
 # bot.py
-
+import grequests #pylint:disable=is-not-accessed
 
 from discord_slash import SlashCommand
 import discord

@@ -1,4 +1,3 @@
-
 import re
 
 import grequests
@@ -12,80 +11,81 @@ from io import BytesIO
 from env_vars import FM_API_KEY
 from env_vars import GUILD_IDS
 
-_font = ImageFont.truetype(os.path.dirname(os.path.abspath(__file__))+'/fonts/RobotoMono-Regular.ttf', 10)
+_font = ImageFont.truetype(
+    os.path.dirname(os.path.abspath(__file__)) + "/fonts/RobotoMono-Regular.ttf", 10
+)
 
 _max_line_chars = 30
 _line_spacing = 10
 
-class CustomClient(discord.Client):
 
+class CustomClient(discord.Client):
     def __init__(self, logger):
         super().__init__()
-        
+
         self.BOT_CALL = "fmbot"
         self.log = logger
 
         self.GUILD_IDS = GUILD_IDS
 
         self.query_tracks = "https://ws.audioscrobbler.com/2.0/?method=user.gettoptracks&user={}&api_key={}&format=json&period={}&limit={}"
-        self.query_albums  = "https://ws.audioscrobbler.com/2.0/?method=user.gettopalbums&user={}&api_key={}&format=json&period={}&limit={}"
+        self.query_albums = "https://ws.audioscrobbler.com/2.0/?method=user.gettopalbums&user={}&api_key={}&format=json&period={}&limit={}"
         self.query_artists = "https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user={}&api_key={}&format=json&period={}&limit={}"
-        
-        self.intervals = ["overall", "7day", "1month", "3month",  "6month", "12month"]
-        self.commands  = ["artists", "albums", "tracks", "collage", "<width>x<height>"]
+
+        self.intervals = ["overall", "7day", "1month", "3month", "6month", "12month"]
+        self.commands = ["artists", "albums", "tracks", "collage", "<width>x<height>"]
 
     async def on_ready(self):
         print("{} is up and running UwU".format(self.user))
         print("Guilds Connected:")
         print([guild.name for guild in self.guilds])
         print(self.GUILD_IDS)
-        
 
     def error_msg(self):
-        response = "Something went wrong. type `{} help` for instructions.".format(self.BOT_CALL)
+        response = "Something went wrong. type `{} help` for instructions.".format(
+            self.BOT_CALL
+        )
         return response
 
     def help_msg(self):
-        response = "Command format:\n`{} <command> <last.fm username> <period>`\ncommands can be: `{}`\nperiod can be: `{}`\n(`period` and `username` are optional)" \
-                        .format(
-                            self.BOT_CALL, 
-                            " | ".join(self.commands),
-                            " | ".join(self.intervals))
+        response = "Command format:\n`{} <command> <last.fm username> <period>`\ncommands can be: `{}`\nperiod can be: `{}`\n(`period` and `username` are optional)".format(
+            self.BOT_CALL, " | ".join(self.commands), " | ".join(self.intervals)
+        )
         return response
 
-
     def validate(self, command, username, period):
-        
+
         username = quote_plus(username)
 
         return command, username, period
 
     async def on_message(self, message):
 
-        
         period = None
 
         if message.author == self.user:
             return
-        
+
         words = message.content.split(" ")
 
-        if self.BOT_CALL+"++" in message.content or self.BOT_CALL+" ++" in message.content:
+        if (
+            self.BOT_CALL + "++" in message.content
+            or self.BOT_CALL + " ++" in message.content
+        ):
             await message.channel.send("OwO wot's dis? thanx for kawmas >w<")
-            return 
+            return
 
         if words[0] != self.BOT_CALL:
-            return        
-        
+            return
+
         self.log.request_classic(message.content, message.author, {})
 
         if words[1] == "help":
             await message.channel.send(self.help_msg())
-            return    
+            return
 
-    
         try:
-            command,username = words[1:3]
+            command, username = words[1:3]
             if username in self.intervals:
                 period = username
                 username, _ = message.author.name
@@ -98,8 +98,7 @@ class CustomClient(discord.Client):
                 print("username is: " + message.author.name)
             except:
                 await message.channel.send(self.error_msg())
-                return    
-
+                return
 
         if period == None:
             period = words[3] if len(words) > 3 else "7day"
@@ -137,75 +136,97 @@ class CustomClient(discord.Client):
         if re_type == 0:
             await message.channel.send(response)
         elif re_type == 1:
-            await message.channel.send(file=discord.File(fp=response, filename='image.png'))
+            await message.channel.send(
+                file=discord.File(fp=response, filename="image.png")
+            )
 
     def duration_helper(self, duration):
-        
+
         if int(duration) == 0:
             return ""
 
-        mins = str(int(int(duration)/60))
-        secs = str(int(int(duration)%60))
+        mins = str(int(int(duration) / 60))
+        secs = str(int(int(duration) % 60))
 
-        mins = "0"*(2-len(mins))+mins
-        secs = "0"*(2-len(secs))+secs
+        mins = "0" * (2 - len(mins)) + mins
+        secs = "0" * (2 - len(secs)) + secs
 
-        return "({}:{})".format(mins,secs)
+        return "({}:{})".format(mins, secs)
 
     async def top_list(self, username, period, thing="albums", limit=6):
-        
+
         if thing == "albums":
-            rqs = [ grequests.get(self.query_albums.format(username, FM_API_KEY, period, limit)) ]
+            rqs = [
+                grequests.get(
+                    self.query_albums.format(username, FM_API_KEY, period, limit)
+                )
+            ]
         elif thing == "artists":
-            rqs = [ grequests.get(self.query_artists.format(username, FM_API_KEY, period, limit)) ]
-        else: 
-            rqs = [ grequests.get(self.query_tracks.format(username, FM_API_KEY, period, limit)) ]
+            rqs = [
+                grequests.get(
+                    self.query_artists.format(username, FM_API_KEY, period, limit)
+                )
+            ]
+        else:
+            rqs = [
+                grequests.get(
+                    self.query_tracks.format(username, FM_API_KEY, period, limit)
+                )
+            ]
 
         responses = grequests.map(rqs)
         res = responses[0].json()
 
         try:
             if thing == "albums":
-                top_albums = [ "{} by {} ({} plays)".format(album["name"], album["artist"]["name"], album["playcount"])
-                                    for album in res["topalbums"]["album"] ][0:limit]
+                top_albums = [
+                    "{} by {} ({} plays)".format(
+                        album["name"], album["artist"]["name"], album["playcount"]
+                    )
+                    for album in res["topalbums"]["album"]
+                ][0:limit]
             elif thing == "artists":
-                top_albums = [ "{} ({} plays)".format(album["name"], album["playcount"])
-                                    for album in res["topartists"]["artist"] ][0:limit]
+                top_albums = [
+                    "{} ({} plays)".format(album["name"], album["playcount"])
+                    for album in res["topartists"]["artist"]
+                ][0:limit]
             else:
-                top_albums = [ "{} by {} {} ({} plays)".format(
-                                album["name"], 
-                                album["artist"]["name"], 
-                                self.duration_helper(album["duration"]),
-                                album["playcount"])
-                                    for album in res["toptracks"]["track"] ][0:limit]
+                top_albums = [
+                    "{} by {} {} ({} plays)".format(
+                        album["name"],
+                        album["artist"]["name"],
+                        self.duration_helper(album["duration"]),
+                        album["playcount"],
+                    )
+                    for album in res["toptracks"]["track"]
+                ][0:limit]
         except:
             response = "no albums found for user {} :pensive:".format(username)
             print(thing)
             print(res)
-            #await message.channel.send(response)
+            # await message.channel.send(response)
             return 0, response
 
         if len(top_albums) == 0:
             print(thing)
             print(res)
             response = "no albums found for user {} :pensive:".format(username)
-            #await message.channel.send(response)
+            # await message.channel.send(response)
             return 0, response
 
-        
         if username[-1] == "s":
             username = username + "'"
         else:
             username = username + "'s"
 
         response = "{} top {} are:\n{}".format(username, thing, "\n".join(top_albums))
-        #await message.channel.send(response)
+        # await message.channel.send(response)
         return 0, response
 
-    def get_meta(self, album): 
+    def get_meta(self, album):
         return {
-            "cover_url" : self.get_cover_link(album),
-            "info" : self.get_text_info(album)
+            "cover_url": self.get_cover_link(album),
+            "info": self.get_text_info(album),
         }
 
     def get_cover_link(self, album):
@@ -217,60 +238,52 @@ class CustomClient(discord.Client):
         return res
 
     def get_text_info(self, album):
-        res = {
-            "artist" : '',
-            "album" : ''
-        }
+        res = {"artist": "", "album": ""}
 
-        try: 
+        try:
             res["artist"] = album["artist"]["name"]
-        except: 
+        except:
             pass
 
-        try: 
+        try:
             res["album"] = album["name"]
-        except: 
+        except:
             pass
 
         return res
-    
-    def format_image_text(self, img, album_info):
-        artist_words = album_info["artist"].split(' ')
-        album_words = album_info["album"].split(' ')
 
-        if (len(artist_words)>0):
-            artist_words.append('-')
+    def format_image_text(self, img, album_info):
+        artist_words = album_info["artist"].split(" ")
+        album_words = album_info["album"].split(" ")
+
+        if len(artist_words) > 0:
+            artist_words.append("-")
 
         all_words = artist_words + album_words
         all_words.reverse()
-        all_words = list(map(lambda w: w+" ", all_words))
+        all_words = list(map(lambda w: w + " ", all_words))
         lines = []
         current_line = 0
         current_line = ""
         while len(all_words) > 0:
-            if len(current_line)+len(all_words[-1]) <= _max_line_chars:
+            if len(current_line) + len(all_words[-1]) <= _max_line_chars:
                 current_line += all_words.pop()
             else:
                 lines.append(current_line)
                 current_line = ""
-        lines.append(current_line) # mustn't forget the last one!
+        lines.append(current_line)  # mustn't forget the last one!
 
         draw = ImageDraw.Draw(img)
 
         offset = 0
 
         for line in lines:
-            draw.text((0, offset),line, font=_font, fill=(255,255,255))
+            draw.text((0, offset), line, font=_font, fill=(255, 255, 255))
             offset += _line_spacing
-
-
 
     def get_cover(self, r):
         # returns all black square with text if image could not be loaded
-        res = Image.new(
-                    mode = "RGB",
-                    size = (174,174),
-                    color=(0,0,0) )
+        res = Image.new(mode="RGB", size=(174, 174), color=(0, 0, 0))
 
         self.format_image_text(res, r[1])
 
@@ -284,63 +297,61 @@ class CustomClient(discord.Client):
 
         by_x, by_y = [int(x) for x in dims.split("x")]
 
-
-        rqs =[ grequests.get(self.query_albums.format(username, FM_API_KEY, period, by_x*by_y)) ]
+        rqs = [
+            grequests.get(
+                self.query_albums.format(username, FM_API_KEY, period, by_x * by_y)
+            )
+        ]
         responses = grequests.map(rqs)
         res = responses[0].json()
 
         try:
-            top_albums = [ self.get_meta(album) for album in res["topalbums"]["album"] ]
+            top_albums = [self.get_meta(album) for album in res["topalbums"]["album"]]
             if len(top_albums) != len(res["topalbums"]["album"]):
                 response = "huh i couldn't grab all the images i needed"
-                #await message.channel.send(response)
+                # await message.channel.send(response)
                 return 0, response
 
         except:
             response = "no albums found for user {} :pensive:".format(username)
-            #await message.channel.send(response)
+            # await message.channel.send(response)
             return 0, response
 
         if len(top_albums) == 0:
             response = "no albums found for user {} :pensive:".format(username)
-            #await message.channel.send(response)
+            # await message.channel.send(response)
             return 0, response
 
         if by_x * by_y > len(top_albums):
-            response = "you don't have enough albums in that period for a {}x{} collage, bucko".format(by_x, by_y)
-            #await message.channel.send(response)
+            response = "you don't have enough albums in that period for a {}x{} collage, bucko".format(
+                by_x, by_y
+            )
+            # await message.channel.send(response)
             return 0, response
 
-        
         rqs = (grequests.get(album["cover_url"]) for album in top_albums)
-        responses = grequests.map(rqs)    
+        responses = grequests.map(rqs)
 
         # praying to god for same consistent order
-        full_data = zip(responses, map(lambda a: a["info"] ,top_albums))
-        
+        full_data = zip(responses, map(lambda a: a["info"], top_albums))
+
         images = [self.get_cover(r) for r in full_data]
 
         width, height = images[0].size
 
-        
-
-        canvas = Image.new(
-                    mode = "RGB",
-                    size = (by_x*width,by_y*height) )
+        canvas = Image.new(mode="RGB", size=(by_x * width, by_y * height))
 
         i = 0
-        for y in range(0,by_y):
+        for y in range(0, by_y):
             for x in range(0, by_x):
-                canvas.paste(images[i], (x*width, y*height))
+                canvas.paste(images[i], (x * width, y * height))
                 i += 1
 
         final = canvas
 
-        #with BytesIO() as image_binary:
+        # with BytesIO() as image_binary:
         image_binary = BytesIO()
-        final.save(image_binary, 'PNG')
+        final.save(image_binary, "PNG")
         image_binary.seek(0)
-        #await message.channel.send(file=discord.File(fp=image_binary, filename='image.png'))
+        # await message.channel.send(file=discord.File(fp=image_binary, filename='image.png'))
         return 1, image_binary
-
-

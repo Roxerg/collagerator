@@ -36,7 +36,7 @@ async def _ping(ctx):
     description="Generates a collage out of your most listened album covers!",
     options=[UsernameOption, DimensionsOption, PeriodOption],
 )
-async def _collage(ctx, username="", dimensions="3x3", period="7day"):
+async def _collage(ctx: discord.ext.commands.Context, username: str="", dimensions: str="3x3", period: str="7day"):
     await ctx.defer()  # we do a little ACK so we have time to fetch stats
     username = str(username)
 
@@ -63,7 +63,7 @@ async def _collage(ctx, username="", dimensions="3x3", period="7day"):
     description="Generates a collage out of your most listened album covers!",
     options=[UsernameOption, ListOption, PeriodOption, CountOption],
 )
-async def _list(ctx, username="", period="7day", listof="albums", count=5):
+async def _list(ctx: discord.ext.commands.Context, username: str="", period: str="7day", listof: str="albums", count: str=5):
     await ctx.defer()  # we do a little ACK so we have time to fetch stats
     username = str(username)
 

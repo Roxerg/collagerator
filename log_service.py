@@ -1,5 +1,7 @@
 import logging
 from logging.handlers import RotatingFileHandler
+import discord
+from client import BotResponseCode
 
 logging.basicConfig(datefmt="%H:%M:%S")
 
@@ -38,16 +40,16 @@ class LogService:
 
     def build_extras(
         self,
-        command="",
-        username="",
-        dimensions="",
-        period="",
-        response_code="",
-        response="",
-        guild="",
-        count="",
-        listof="",
-    ):
+        command: str="",
+        username: str="",
+        dimensions: str="",
+        period: str="",
+        response_code: str="",
+        response: str="",
+        guild: str="",
+        count: str="",
+        listof: str="",
+    )-> dict[str, str]:
         return {
             "command": command,
             "username": f"| USER:{username}",
@@ -60,7 +62,7 @@ class LogService:
             "listof": listof,
         }
 
-    def add_command_params(self, extra_params, extras):
+    def add_command_params(self, extra_params: dict[str, str], extras):
 
         if "dimensions" in extras:
             extra_params["dimensions"] = extras["dimensions"]
@@ -69,7 +71,7 @@ class LogService:
 
         return extra_params
 
-    def request_slash(self, ctx, command, username, extras):
+    def request_slash(self, ctx: discord.ext.commands.Context, command: str, username: str, extras: dict[str, str]):
 
         extra_params = self.build_extras(
             command=command, username=username, guild=ctx.author.guild
@@ -79,7 +81,7 @@ class LogService:
 
         self.requests_logger.info("REQ SLASH", extra=extra_params)
 
-    def request_classic(self, command, username, extras):
+    def request_classic(self, command: str, username: str, extras: str):
 
         extra_params = self.build_extras(
             command=command,
@@ -93,7 +95,7 @@ class LogService:
             extra=extra_params,
         )
 
-    def response(self, command, username, statuscode, response):
+    def response(self, command: str, username: str, statuscode: BotResponseCode, response: str):
         self.requests_logger.info(
             "RES",
             extra=self.build_extras(
@@ -110,5 +112,5 @@ class LogService:
     def error(self, command, extra):
         self.errors_logger.error()
 
-    def misc(self, message):
+    def misc(self, message: discord.Message):
         self.requests_logger.info(message)

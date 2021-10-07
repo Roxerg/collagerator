@@ -64,10 +64,10 @@ class ImageProcessor:
             draw.text((0, offset), line, font=self._font, fill=self._font_color)
             offset += self._line_spacing
 
-    def blank_cover(self, size=174, mode="RGB"):
+    def blank_cover(self, size: int=174, mode: str="RGB") -> Image_t:
         return Image.new(mode=mode, size=(size, size), color=(0, 0, 0))
 
-    def get_cover(self, album: AlbumEntry, with_text=False):
+    def get_cover(self, album: AlbumEntry, with_text=False) -> Image_t:
         # returns all black square with text if image could not be loaded
 
         no_image = False

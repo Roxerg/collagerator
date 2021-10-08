@@ -1,10 +1,14 @@
 from typing import TypedDict
 
 # Define TypedDicts to type-annotate dictionaries where the values have differing types.
-# In this file, this will only be used for the function 'duration_helper'.
+
+class TextInfo(TypedDict):
+    artist: str
+    album: str
+
 class MetadataType(TypedDict):
     cover_url: str
-    info: dict[str, str]
+    info: TextInfo
 
 def duration_helper(duration: str) -> str:
 
@@ -21,7 +25,7 @@ def duration_helper(duration: str) -> str:
 
 
 ### Parsing Last.fm response utilities ###
-def get_meta(album: list) -> metadata_type:
+def get_meta(album: list) -> MetadataType:
     return {
         "cover_url": get_cover_link(album),
         "info": get_text_info(album),
@@ -38,7 +42,7 @@ def get_cover_link(album: list) -> str:
     return res
 
 
-def get_text_info(album: list) -> dict[str, str]:
+def get_text_info(album: list) -> TextInfo:
     res = {"artist": "", "album": ""}
     try:
         res["artist"] = album["artist"]["name"]

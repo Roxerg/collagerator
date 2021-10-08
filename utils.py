@@ -2,7 +2,7 @@ from typing import TypedDict
 
 # Define TypedDicts to type-annotate dictionaries where the values have differing types.
 # In this file, this will only be used for the function 'duration_helper'.
-class metadata_type(TypedDict):
+class MetadataType(TypedDict):
     cover_url: str
     info: dict[str, str]
 

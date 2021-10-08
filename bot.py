@@ -17,6 +17,7 @@ from slash_options import PeriodOption
 from slash_options import ListOption
 from slash_options import CountOption
 
+DiscordContext = discord.ext.commands.Context
 
 log = LogService()
 
@@ -36,7 +37,7 @@ async def _ping(ctx):
     description="Generates a collage out of your most listened album covers!",
     options=[UsernameOption, DimensionsOption, PeriodOption],
 )
-async def _collage(ctx: discord.ext.commands.Context, username: str="", dimensions: str="3x3", period: str="7day"):
+async def _collage(ctx: DiscordContext, username: str="", dimensions: str="3x3", period: str="7day"):
     await ctx.defer()  # we do a little ACK so we have time to fetch stats
     username = str(username)
 
@@ -63,7 +64,7 @@ async def _collage(ctx: discord.ext.commands.Context, username: str="", dimensio
     description="Generates a collage out of your most listened album covers!",
     options=[UsernameOption, ListOption, PeriodOption, CountOption],
 )
-async def _list(ctx: discord.ext.commands.Context, username: str="", period: str="7day", listof: str="albums", count: str=5):
+async def _list(ctx: DiscordContext, username: str="", period: str="7day", listof: str="albums", count: str=5):
     await ctx.defer()  # we do a little ACK so we have time to fetch stats
     username = str(username)
 

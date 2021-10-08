@@ -2,6 +2,7 @@ from locale import strcoll
 import re
 from enum import Enum
 from typing import Any, BinaryIO, Dict, Tuple, TypedDict, Union
+import log_service
 
 import grequests
 import discord
@@ -26,7 +27,7 @@ class BotResponseCode(Enum):
 
 
 class CustomClient(discord.Client):
-    def __init__(self, logger):
+    def __init__(self, logger: log_service.LogService):
         super().__init__()
 
         self.BOT_CALL = "fmbot"
@@ -49,25 +50,25 @@ class CustomClient(discord.Client):
         print([guild.name for guild in self.guilds])
         print(self.GUILD_IDS)
 
-    def error_msg(self):
+    def error_msg(self) -> str:
         response = "Something went wrong. type `{} help` for instructions.".format(
             self.BOT_CALL
         )
         return response
 
-    def help_msg(self):
+    def help_msg(self) -> str:
         response = "Command format:\n`{} <command> <last.fm username> <period>`\ncommands can be: `{}`\nperiod can be: `{}`\n(`period` and `username` are optional)".format(
             self.BOT_CALL, " | ".join(self.commands), " | ".join(self.intervals)
         )
         return response
 
-    def validate(self, command, username, period):
+    def validate(self, command: str, username: str, period: str) -> tuple[str, str, str]:
 
         username = quote_plus(username)
 
         return command, username, period
 
-    async def on_message(self, message):
+    async def on_message(self, message: discord.Message):
 
         period = None
 
@@ -150,7 +151,7 @@ class CustomClient(discord.Client):
 
 
 
-    async def top_list(self, username, period, thing="albums", limit=6):
+    async def top_list(self, username: str, period: str, thing: str="albums", limit: int=6) -> tuple[BotResponseCode, str]:
 
         if thing == "albums":
             rqs = [
@@ -218,7 +219,7 @@ class CustomClient(discord.Client):
         return BotResponseCode.TEXT, response
 
 
-    async def top_collage(self, username, period, dims="3x3"):
+    async def top_collage(self, username: str, period: str, dims: str="3x3") -> tuple[BotResponseCode, str] or tuple[BotResponseCode, BytesIO]:
 
         by_x, by_y = [int(x) for x in dims.split("x")]
 

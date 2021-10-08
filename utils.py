@@ -1,4 +1,16 @@
-def duration_helper(duration):
+from typing import TypedDict
+
+# Define TypedDicts to type-annotate dictionaries where the values have differing types.
+
+class TextInfo(TypedDict):
+    artist: str
+    album: str
+
+class MetadataType(TypedDict):
+    cover_url: str
+    info: TextInfo
+
+def duration_helper(duration: str) -> str:
 
     if int(duration) == 0:
         return ""
@@ -13,14 +25,14 @@ def duration_helper(duration):
 
 
 ### Parsing Last.fm response utilities ###
-def get_meta(album):
+def get_meta(album: list) -> MetadataType:
     return {
         "cover_url": get_cover_link(album),
         "info": get_text_info(album),
     }
 
 
-def get_cover_link(album) -> str:
+def get_cover_link(album: list) -> str:
     res = None
     try:
         # magic idx is for picking size of image
@@ -30,7 +42,7 @@ def get_cover_link(album) -> str:
     return res
 
 
-def get_text_info(album):
+def get_text_info(album: list) -> TextInfo:
     res = {"artist": "", "album": ""}
     try:
         res["artist"] = album["artist"]["name"]

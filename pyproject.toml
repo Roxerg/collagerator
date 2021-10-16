@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "collagerator"
+version = "0.1.0"
+description = ""
+authors = [""]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+discord-py-slash-command = "~1.1.2"
+"discord.py" = "~1.7.3"
+grequests = "~0.6.0"
+Pillow = "~8.2.0"
+python-dotenv = "~0.17.0"
+
+[tool.poetry.dev-dependencies]
+black = "^21.9b0"
+flake8 = "~4.0.1"
+flake8-black = "~0.2.3"
+flake8-import-order = "~0.18.1"
+flake8-bugbear = "~21.9.2"
+
+[tool.black]
+line-length = 119
+exclude = "venv"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

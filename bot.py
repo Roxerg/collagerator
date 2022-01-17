@@ -1,31 +1,29 @@
 # bot.py
-import grequests #pylint:disable=is-not-accessed
-
 import disnake
-import logging
+from discord_slash import SlashCommand
+from disnake.ext import commands
 
 from client import CustomClient
-
 from env_vars import TOKEN
-from env_vars import GUILD_IDS
+
 from log_service import LogService
+from slash_options import (
+    CountOption,
+    DimensionsOption,
+    ListOption,
+    PeriodOption,
+    UsernameOption,
+)
 
-from slash_options import UsernameOption
-from slash_options import DimensionsOption
-from slash_options import PeriodOption
-from slash_options import ListOption
-from slash_options import CountOption
-
-# DiscordContext = discord.ext.commands.Context
+DiscordContext = commands.Context
 
 log = LogService()
-
 
 custom_client = CustomClient(log)
 slash = SlashCommand(custom_client, sync_commands=True)
 
 
-@slash.slash(name="ping", guild_ids=custom_client.GUILD_IDS)
+@slash.slash(name="ping", guild_ids=custom_client.guild_ids)
 async def _ping(ctx):
     print("received!")
     await ctx.send("Pong! ({}ms)".format(custom_client.latency * 1000))
@@ -33,23 +31,19 @@ async def _ping(ctx):
 
 @slash.slash(
     name="collage",
-    guild_ids=custom_client.GUILD_IDS,
+    guild_ids=custom_client.guild_ids,
     description="Generates a collage out of your most listened album covers!",
     options=[UsernameOption, DimensionsOption, PeriodOption],
 )
-async def _collage(ctx: DiscordContext, username: str="", dimensions: str="3x3", period: str="7day"):
+async def _collage(ctx: DiscordContext, username: str = "", dimensions: str = "3x3", period: str = "7day"):
     await ctx.defer()  # we do a little ACK so we have time to fetch stats
     username = str(username)
 
     if username == "":
         username = ctx.author.name
 
-    log.request_slash(
-        ctx, "collage", username, extras={"dimensions": dimensions, "period": period}
-    )
-    re_type, response = await custom_client.top_collage(
-        username, period, dims=dimensions
-    )
+    log.request_slash(ctx, "collage", username, extras={"dimensions": dimensions, "period": period})
+    re_type, response = await custom_client.top_collage(username, period, dims=dimensions)
     log.response("collage", username, re_type, response)
 
     if re_type == 0:
@@ -60,11 +54,11 @@ async def _collage(ctx: DiscordContext, username: str="", dimensions: str="3x3",
 
 @slash.slash(
     name="list",
-    guild_ids=custom_client.GUILD_IDS,
+    guild_ids=custom_client.guild_ids,
     description="Generates a collage out of your most listened album covers!",
     options=[UsernameOption, ListOption, PeriodOption, CountOption],
 )
-async def _list(ctx: DiscordContext, username: str="", period: str="7day", listof: str="albums", count: str=5):
+async def _list(ctx: DiscordContext, username: str = "", period: str = "7day", listof: str = "albums", count: str = 5):
     await ctx.defer()  # we do a little ACK so we have time to fetch stats
     username = str(username)
 
@@ -79,9 +73,7 @@ async def _list(ctx: DiscordContext, username: str="", period: str="7day", listo
         username,
         extras={"listof": listof, "period": period, "count": count},
     )
-    re_type, response = await custom_client.top_list(
-        username, period, thing=listof, limit=count
-    )
+    re_type, response = await custom_client.top_list(username, period, thing=listof, limit=count)
     log.response("list", username, re_type, response)
 
     if re_type == 0:

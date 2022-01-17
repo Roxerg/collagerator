@@ -1,23 +1,17 @@
-from locale import strcoll
 import re
-from typing import Any, BinaryIO, Dict, Tuple, TypedDict, Union
-import log_service
-
-import grequests
-import disnake
-import os
-
-from urllib.parse import quote_plus
-from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
+from typing import List
+from urllib.parse import quote_plus
 
+import discord
+import grequests
+
+import log_service
 from env_vars import FM_API_KEY
-from env_vars import GUILD_IDS
-
 from image_processing import ImageProcessor
-from utils import duration_helper
-from utils import get_meta
 
+
+from utils import duration_helper, get_meta
 
 
 class CustomClient(discord.Client):
@@ -26,8 +20,6 @@ class CustomClient(discord.Client):
 
         self.BOT_CALL = "fmbot"
         self.log = logger
-
-        self.GUILD_IDS = GUILD_IDS
 
         self.query_tracks = "https://ws.audioscrobbler.com/2.0/?method=user.gettoptracks&user={}&api_key={}&format=json&period={}&limit={}"
         self.query_albums = "https://ws.audioscrobbler.com/2.0/?method=user.gettopalbums&user={}&api_key={}&format=json&period={}&limit={}"
@@ -38,6 +30,10 @@ class CustomClient(discord.Client):
 
         self.imageProcessor = ImageProcessor()
 
+    @property
+    def guild_ids(self) -> List[int]:
+        return list(map(lambda guild: guild.id, self.guilds))
+
     async def on_ready(self):
         print("{} is up and running UwU".format(self.user))
         print("Guilds Connected:")
@@ -45,9 +41,7 @@ class CustomClient(discord.Client):
         print(self.GUILD_IDS)
 
     def error_msg(self) -> str:
-        response = "Something went wrong. type `{} help` for instructions.".format(
-            self.BOT_CALL
-        )
+        response = "Something went wrong. type `{} help` for instructions.".format(self.BOT_CALL)
         return response
 
     def help_msg(self) -> str:
@@ -71,10 +65,7 @@ class CustomClient(discord.Client):
 
         words = message.content.split(" ")
 
-        if (
-            self.BOT_CALL + "++" in message.content
-            or self.BOT_CALL + " ++" in message.content
-        ):
+        if self.BOT_CALL + "++" in message.content or self.BOT_CALL + " ++" in message.content:
             await message.channel.send("OwO wot's dis? thanx for kawmas >w<")
             return
 
@@ -139,32 +130,18 @@ class CustomClient(discord.Client):
         if re_type == BotResponseCode.ERROR or re_type == BotResponseCode.TEXT:
             await message.channel.send(response)
         elif re_type == BotResponseCode.IMAGE:
-            await message.channel.send(
-                file=discord.File(fp=response, filename="image.png")
-            )
+            await message.channel.send(file=discord.File(fp=response, filename="image.png"))
 
-
-
-    async def top_list(self, username: str, period: str, thing: str="albums", limit: int=6) -> tuple[BotResponseCode, str]:
+    async def top_list(
+        self, username: str, period: str, thing: str = "albums", limit: int = 6
+    ) -> tuple[BotResponseCode, str]:
 
         if thing == "albums":
-            rqs = [
-                grequests.get(
-                    self.query_albums.format(username, FM_API_KEY, period, limit)
-                )
-            ]
+            rqs = [grequests.get(self.query_albums.format(username, FM_API_KEY, period, limit))]
         elif thing == "artists":
-            rqs = [
-                grequests.get(
-                    self.query_artists.format(username, FM_API_KEY, period, limit)
-                )
-            ]
+            rqs = [grequests.get(self.query_artists.format(username, FM_API_KEY, period, limit))]
         else:
-            rqs = [
-                grequests.get(
-                    self.query_tracks.format(username, FM_API_KEY, period, limit)
-                )
-            ]
+            rqs = [grequests.get(self.query_tracks.format(username, FM_API_KEY, period, limit))]
 
         responses = grequests.map(rqs)
         res = responses[0].json()
@@ -172,15 +149,12 @@ class CustomClient(discord.Client):
         try:
             if thing == "albums":
                 top_albums = [
-                    "{} by {} ({} plays)".format(
-                        album["name"], album["artist"]["name"], album["playcount"]
-                    )
+                    "{} by {} ({} plays)".format(album["name"], album["artist"]["name"], album["playcount"])
                     for album in res["topalbums"]["album"]
                 ][0:limit]
             elif thing == "artists":
                 top_albums = [
-                    "{} ({} plays)".format(album["name"], album["playcount"])
-                    for album in res["topartists"]["artist"]
+                    "{} ({} plays)".format(album["name"], album["playcount"]) for album in res["topartists"]["artist"]
                 ][0:limit]
             else:
                 top_albums = [
@@ -212,16 +186,13 @@ class CustomClient(discord.Client):
         response = "{} top {} are:\n{}".format(username, thing, "\n".join(top_albums))
         return BotResponseCode.TEXT, response
 
-
-    async def top_collage(self, username: str, period: str, dims: str="3x3") -> tuple[BotResponseCode, str] or tuple[BotResponseCode, BytesIO]:
+    async def top_collage(
+        self, username: str, period: str, dims: str = "3x3"
+    ) -> tuple[BotResponseCode, str] or tuple[BotResponseCode, BytesIO]:
 
         by_x, by_y = [int(x) for x in dims.split("x")]
 
-        rqs = [
-            grequests.get(
-                self.query_albums.format(username, FM_API_KEY, period, by_x * by_y)
-            )
-        ]
+        rqs = [grequests.get(self.query_albums.format(username, FM_API_KEY, period, by_x * by_y))]
         responses = grequests.map(rqs)
         res = responses[0].json()
 
@@ -240,9 +211,7 @@ class CustomClient(discord.Client):
             return BotResponseCode.ERROR, response
 
         if by_x * by_y > len(top_albums):
-            response = "you don't have enough albums in that period for a {}x{} collage, bucko".format(
-                by_x, by_y
-            )
+            response = "you don't have enough albums in that period for a {}x{} collage, bucko".format(by_x, by_y)
             return BotResponseCode.ERROR, response
 
         rqs = (grequests.get(album["cover_url"]) for album in top_albums)

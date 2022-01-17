@@ -1,4 +1,4 @@
-from discord_slash.utils.manage_commands import create_option, create_choice
+from discord_slash.utils.manage_commands import create_choice, create_option
 
 UsernameOption = create_option(
     name="username",
@@ -37,6 +37,4 @@ ListOption = create_option(
         create_choice(name="albums", value="albums"),
     ],
 )
-CountOption = create_option(
-    name="count", description="This one goes up to 11", option_type=3, required=False
-)
+CountOption = create_option(name="count", description="This one goes up to 11", option_type=3, required=False)

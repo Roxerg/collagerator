@@ -2,13 +2,16 @@ from typing import TypedDict
 
 # Define TypedDicts to type-annotate dictionaries where the values have differing types.
 
+
 class TextInfo(TypedDict):
     artist: str
     album: str
 
+
 class MetadataType(TypedDict):
     cover_url: str
     info: TextInfo
+
 
 def duration_helper(duration: str) -> str:
 

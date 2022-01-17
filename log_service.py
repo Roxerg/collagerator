@@ -1,19 +1,16 @@
 import logging
 from logging.handlers import RotatingFileHandler
+
 import discord
-from client import BotResponseCode
+from discord.ext import commands
 
 logging.basicConfig(datefmt="%H:%M:%S")
 
 
 class LogService:
     def __init__(self):
-        requests_filehandler = RotatingFileHandler(
-            "requests.log", mode="a", backupCount=2, maxBytes=2 * 1024 * 1024
-        )
-        errors_filehandler = RotatingFileHandler(
-            "errors.log", mode="a", backupCount=2, maxBytes=2 * 1024 * 1024
-        )
+        requests_filehandler = RotatingFileHandler("requests.log", mode="a", backupCount=2, maxBytes=2 * 1024 * 1024)
+        errors_filehandler = RotatingFileHandler("errors.log", mode="a", backupCount=2, maxBytes=2 * 1024 * 1024)
 
         requests_formatter = logging.Formatter(
             "%(asctime)s | %(message)s %(guild)s %(username)s | %(command)s %(period)s %(dimensions)s %(response_code)s %(response)s %(listof)s %(count)s"
@@ -40,16 +37,16 @@ class LogService:
 
     def build_extras(
         self,
-        command: str="",
-        username: str="",
-        dimensions: str="",
-        period: str="",
-        response_code: str="",
-        response: str="",
-        guild: str="",
-        count: str="",
-        listof: str="",
-    )-> dict[str, str]:
+        command: str = "",
+        username: str = "",
+        dimensions: str = "",
+        period: str = "",
+        response_code: str = "",
+        response: str = "",
+        guild: str = "",
+        count: str = "",
+        listof: str = "",
+    ) -> dict[str, str]:
         return {
             "command": command,
             "username": f"| USER:{username}",
@@ -71,11 +68,9 @@ class LogService:
 
         return extra_params
 
-    def request_slash(self, ctx: discord.ext.commands.Context, command: str, username: str, extras: dict[str, str]):
+    def request_slash(self, ctx: commands.Context, command: str, username: str, extras: dict[str, str]):
 
-        extra_params = self.build_extras(
-            command=command, username=username, guild=ctx.author.guild
-        )
+        extra_params = self.build_extras(command=command, username=username, guild=ctx.author.guild)
 
         extra_params = self.add_command_params(extra_params, extras)
 
@@ -105,9 +100,7 @@ class LogService:
             ),
         )
         if statuscode != 1:
-            self.errors_logger.error(
-                "FAIL MESSAGE", extra=self.build_extras(response=response)
-            )
+            self.errors_logger.error("FAIL MESSAGE", extra=self.build_extras(response=response))
 
     def error(self, command, extra):
         self.errors_logger.error()

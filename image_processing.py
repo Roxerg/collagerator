@@ -1,11 +1,11 @@
+import os
 from io import BytesIO
-from typing import Dict, List, NamedTuple, Tuple, TypedDict, Any
+from typing import Any, Dict, List, NamedTuple, Tuple, TypedDict
+
 from PIL import Image, ImageDraw, ImageFont
 from PIL.Image import Image as Image_t
 from PIL.ImageDraw import ImageDraw as ImageDraw_t
 from PIL.ImageFont import ImageFont as ImageFont_t
-
-import os
 
 
 class AlbumInfo(TypedDict):
@@ -64,7 +64,7 @@ class ImageProcessor:
             draw.text((0, offset), line, font=self._font, fill=self._font_color)
             offset += self._line_spacing
 
-    def blank_cover(self, size: int=174, mode: str="RGB") -> Image_t:
+    def blank_cover(self, size: int = 174, mode: str = "RGB") -> Image_t:
         return Image.new(mode=mode, size=(size, size), color=(0, 0, 0))
 
     def get_cover(self, album: AlbumEntry, with_text=False) -> Image_t:
@@ -76,7 +76,7 @@ class ImageProcessor:
         res = Image.new(mode="RGB", size=(174, 174), color=(0, 0, 0))
 
         try:
-            res = Image.open(BytesIO(album[0]['content']))
+            res = Image.open(BytesIO(album[0]["content"]))
         except:
             res = self.blank_cover()
             no_image = True

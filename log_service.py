@@ -1,9 +1,20 @@
 import logging
 from logging.handlers import RotatingFileHandler
-import discord
-from client import BotResponseCode
+
+import disnake
+from disnake.ext.commands import Context
+
+from enum import Enum
+
+from disnake import Message
+
 
 logging.basicConfig(datefmt="%H:%M:%S")
+
+class BotResponseCode(Enum):
+    ERROR = -1
+    TEXT = 0
+    IMAGE = 1
 
 
 class LogService:
@@ -70,8 +81,7 @@ class LogService:
             extra_params["period"] = extras["period"]
 
         return extra_params
-
-    def request_slash(self, ctx: discord.ext.commands.Context, command: str, username: str, extras: dict[str, str]):
+    def request_slash(self, ctx: Context, command: str, username: str, extras: dict[str, str]):
 
         extra_params = self.build_extras(
             command=command, username=username, guild=ctx.author.guild
@@ -112,5 +122,5 @@ class LogService:
     def error(self, command, extra):
         self.errors_logger.error()
 
-    def misc(self, message: discord.Message):
+    def misc(self, message: Message):
         self.requests_logger.info(message)

@@ -1,11 +1,10 @@
 from locale import strcoll
 import re
-from enum import Enum
 from typing import Any, BinaryIO, Dict, Tuple, TypedDict, Union
 import log_service
 
 import grequests
-import discord
+import disnake
 import os
 
 from urllib.parse import quote_plus
@@ -19,11 +18,6 @@ from image_processing import ImageProcessor
 from utils import duration_helper
 from utils import get_meta
 
-
-class BotResponseCode(Enum):
-    ERROR = -1
-    TEXT = 0
-    IMAGE = 1
 
 
 class CustomClient(discord.Client):

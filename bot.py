@@ -1,8 +1,7 @@
 # bot.py
 import grequests #pylint:disable=is-not-accessed
 
-from discord_slash import SlashCommand
-import discord
+import disnake
 import logging
 
 from client import CustomClient
@@ -17,9 +16,10 @@ from slash_options import PeriodOption
 from slash_options import ListOption
 from slash_options import CountOption
 
-DiscordContext = discord.ext.commands.Context
+# DiscordContext = discord.ext.commands.Context
 
 log = LogService()
+
 
 custom_client = CustomClient(log)
 slash = SlashCommand(custom_client, sync_commands=True)
@@ -68,7 +68,7 @@ async def _list(ctx: DiscordContext, username: str="", period: str="7day", listo
     await ctx.defer()  # we do a little ACK so we have time to fetch stats
     username = str(username)
 
-    if username == "":
+    if username == "" == "":
         username = ctx.author.name
 
     count = int(count) if int(count) <= 11 else 11

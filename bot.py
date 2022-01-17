@@ -23,7 +23,7 @@ custom_client = CustomClient(log)
 slash = SlashCommand(custom_client, sync_commands=True)
 
 
-@slash.slash(name="ping", guild_ids=custom_client.GUILD_IDS)
+@slash.slash(name="ping", guild_ids=custom_client.guild_ids)
 async def _ping(ctx):
     print("received!")
     await ctx.send("Pong! ({}ms)".format(custom_client.latency * 1000))
@@ -31,7 +31,7 @@ async def _ping(ctx):
 
 @slash.slash(
     name="collage",
-    guild_ids=custom_client.GUILD_IDS,
+    guild_ids=custom_client.guild_ids,
     description="Generates a collage out of your most listened album covers!",
     options=[UsernameOption, DimensionsOption, PeriodOption],
 )
@@ -54,7 +54,7 @@ async def _collage(ctx: DiscordContext, username: str = "", dimensions: str = "3
 
 @slash.slash(
     name="list",
-    guild_ids=custom_client.GUILD_IDS,
+    guild_ids=custom_client.guild_ids,
     description="Generates a collage out of your most listened album covers!",
     options=[UsernameOption, ListOption, PeriodOption, CountOption],
 )

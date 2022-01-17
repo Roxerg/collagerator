@@ -27,8 +27,6 @@ class CustomClient(discord.Client):
         self.BOT_CALL = "fmbot"
         self.log = logger
 
-        self.GUILD_IDS = GUILD_IDS
-
         self.query_tracks = "https://ws.audioscrobbler.com/2.0/?method=user.gettoptracks&user={}&api_key={}&format=json&period={}&limit={}"
         self.query_albums = "https://ws.audioscrobbler.com/2.0/?method=user.gettopalbums&user={}&api_key={}&format=json&period={}&limit={}"
         self.query_artists = "https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user={}&api_key={}&format=json&period={}&limit={}"
@@ -37,6 +35,10 @@ class CustomClient(discord.Client):
         self.commands = ["artists", "albums", "tracks", "collage", "<width>x<height>"]
 
         self.imageProcessor = ImageProcessor()
+
+    @property
+    def guild_ids(self) -> List[int]:
+        return list(map(lambda guild: guild.id, self.guilds))
 
     async def on_ready(self):
         print("{} is up and running UwU".format(self.user))

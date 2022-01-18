@@ -3,134 +3,27 @@ from io import BytesIO
 from typing import List
 from urllib.parse import quote_plus
 
-import discord
+import disnake
 import grequests
 
-import log_service
-from env_vars import FM_API_KEY
+from services.log_service import LogService
+from services.log_service import BotResponseCode
+
+from params.env_vars import FM_API_KEY
 from image_processing import ImageProcessor
 
 
-from utils import duration_helper, get_meta
+from utils.utils import duration_helper, get_meta
+from disnake.ext.commands import Bot
 
-
-class CustomClient(discord.Client):
-    def __init__(self, logger: log_service.LogService):
-        super().__init__()
-
-        self.BOT_CALL = "fmbot"
-        self.log = logger
+class CollageService():
+    def __init__(self, logger: LogService):
 
         self.query_tracks = "https://ws.audioscrobbler.com/2.0/?method=user.gettoptracks&user={}&api_key={}&format=json&period={}&limit={}"
         self.query_albums = "https://ws.audioscrobbler.com/2.0/?method=user.gettopalbums&user={}&api_key={}&format=json&period={}&limit={}"
         self.query_artists = "https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user={}&api_key={}&format=json&period={}&limit={}"
 
-        self.intervals = ["overall", "7day", "1month", "3month", "6month", "12month"]
-        self.commands = ["artists", "albums", "tracks", "collage", "<width>x<height>"]
-
         self.imageProcessor = ImageProcessor()
-
-    @property
-    def guild_ids(self) -> List[int]:
-        return list(map(lambda guild: guild.id, self.guilds))
-
-    async def on_ready(self):
-        print("{} is up and running UwU".format(self.user))
-        print("Guilds Connected:")
-        print([guild.name for guild in self.guilds])
-        print(self.GUILD_IDS)
-
-    def error_msg(self) -> str:
-        response = "Something went wrong. type `{} help` for instructions.".format(self.BOT_CALL)
-        return response
-
-    def help_msg(self) -> str:
-        response = "Command format:\n`{} <command> <last.fm username> <period>`\ncommands can be: `{}`\nperiod can be: `{}`\n(`period` and `username` are optional)".format(
-            self.BOT_CALL, " | ".join(self.commands), " | ".join(self.intervals)
-        )
-        return response
-
-    def validate(self, command: str, username: str, period: str) -> tuple[str, str, str]:
-
-        username = quote_plus(username)
-
-        return command, username, period
-
-    async def on_message(self, message: discord.Message):
-
-        period = None
-
-        if message.author == self.user:
-            return
-
-        words = message.content.split(" ")
-
-        if self.BOT_CALL + "++" in message.content or self.BOT_CALL + " ++" in message.content:
-            await message.channel.send("OwO wot's dis? thanx for kawmas >w<")
-            return
-
-        if words[0] != self.BOT_CALL:
-            return
-
-        self.log.request_classic(message.content, message.author, {})
-
-        if words[1] == "help":
-            await message.channel.send(self.help_msg())
-            return
-
-        try:
-            command, username = words[1:3]
-            if username in self.intervals:
-                period = username
-                username, _ = message.author.name
-        except:
-            print("No username?")
-            print("Try using: " + message.author.name)
-            try:
-                command = words[1:2][0]
-                username = message.author.name
-                print("username is: " + message.author.name)
-            except:
-                await message.channel.send(self.error_msg())
-                return
-
-        if period == None:
-            period = words[3] if len(words) > 3 else "7day"
-
-        # make URL safe
-        command, username, period = self.validate(command, username, period)
-
-        if period not in self.intervals:
-            if period == "month":
-                period = "1month"
-            elif period == "week":
-                period = "7day"
-            elif period == "year":
-                period = "12month"
-            else:
-                print("period failed")
-                await message.channel.send(self.error_msg())
-                return
-
-        if command == "albums":
-            re_type, response = await self.top_list(username, period, thing="albums")
-        elif command == "artists":
-            re_type, response = await self.top_list(username, period, thing="artists")
-        elif command == "tracks":
-            re_type, response = await self.top_list(username, period, thing="tracks")
-        elif command == "collage":
-            re_type, response = await self.top_collage(username, period)
-        elif re.match("^[0-9]x[0-9]$", command):
-            re_type, response = await self.top_collage(username, period, dims=command)
-        else:
-            print("command failed")
-            await message.channel.send(self.error_msg())
-            return
-
-        if re_type == BotResponseCode.ERROR or re_type == BotResponseCode.TEXT:
-            await message.channel.send(response)
-        elif re_type == BotResponseCode.IMAGE:
-            await message.channel.send(file=discord.File(fp=response, filename="image.png"))
 
     async def top_list(
         self, username: str, period: str, thing: str = "albums", limit: int = 6

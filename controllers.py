@@ -30,7 +30,6 @@ class SlashController():
     
     async def collage(self, inter: ApplicationCommandInteraction, username: str, dimensions: str, period: str):
         await inter.response.defer()  # we do a little ACK so we have time to fetch stats
-        username = str(username)
 
         if username == "":
             username = inter.author.name
@@ -45,14 +44,13 @@ class SlashController():
             await inter.edit_original_message(file=disnake.File(fp=response, filename="image.png"))
 
 
-    async def toplist(self, inter: ApplicationCommandInteraction, username: str, period: str, listof: str, count: str):
+    async def toplist(self, inter: ApplicationCommandInteraction, username: str, period: str, listof: str, count: int):
         await inter.response.defer()  # we do a little ACK so we have time to fetch stats
-        username = str(username)
 
         if username == "":
             username = inter.author.name
 
-        count = int(count) if int(count) <= 11 else 11
+        count = count if count <= 11 else 11
 
         # log.request_slash(
         #     ctx,
@@ -118,21 +116,21 @@ class PrefixController():
             await message.channel.send(self.help_msg())
             return
 
-        try:
+        if len(words) >= 3:
             command, username = words[1:3]
             if username in self.intervals:
                 period = username
                 username, _ = message.author.name
-        except:
-            print("No username?")
-            print("Try using: " + message.author.name)
+        elif len(words) == 2:
+            command = words[1]
             try:
-                command = words[1:2][0]
                 username = message.author.name
-                print("username is: " + message.author.name)
-            except:
+            except AttributeError:
                 await message.channel.send(self.error_msg())
                 return
+        else:
+            await message.channel.send(self.error_msg())
+            return
 
         if period == None:
             period = words[3] if len(words) > 3 else "7day"
@@ -148,7 +146,6 @@ class PrefixController():
             elif period == "year":
                 period = "12month"
             else:
-                print("period failed")
                 await message.channel.send(self.error_msg())
                 return
 
@@ -163,7 +160,6 @@ class PrefixController():
         elif re.match("^[0-9]x[0-9]$", command):
             re_type, response = await self.service.top_collage(username, period, dims=command)
         else:
-            print("command failed")
             await message.channel.send(self.error_msg())
             return
 

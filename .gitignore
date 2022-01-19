@@ -146,3 +146,4 @@ env
 botenv
 requests.log
 errors.log
+.vscode

@@ -62,13 +62,9 @@ class CollageService():
                 ][0:limit]
         except:
             response = "no albums found for user {} :pensive:".format(username)
-            print(thing)
-            print(res)
             return BotResponseCode.ERROR, response
 
         if len(top_albums) == 0:
-            print(thing)
-            print(res)
             response = "no albums found for user {} :pensive:".format(username)
             return BotResponseCode.ERROR, response
 

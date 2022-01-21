@@ -60,7 +60,7 @@ async def _collage(inter: ApplicationCommandInteraction, username: str = "", dim
     description="Provides a list of your most listened songs/artists/albums",
     options=[UsernameOption, ListOption, PeriodOption, CountOption],
 )
-async def _list(inter: ApplicationCommandInteraction, username: str = "", period: str = "7day", listof: str = "albums", count: str = 5):
+async def _list(inter: ApplicationCommandInteraction, username: str = "", period: str = "7day", listof: str = "albums", count: int = 5):
     await slash_controller.toplist(inter, username, period, listof, count)
 
 ### PREFIX COMMANDS ###

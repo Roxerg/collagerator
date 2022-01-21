@@ -40,4 +40,4 @@ ListOption = Option(
         OptionChoice(name="albums", value="albums"),
     ],
 )
-CountOption = Option(name="count", description="This one goes up to 11", type=OptionType.string, required=False)
+CountOption = Option(name="count", description="This one goes up to 11", type=OptionType.integer, required=False)

@@ -3,6 +3,7 @@ from logging.handlers import RotatingFileHandler
 
 import disnake
 from disnake.ext.commands import Context
+from disnake import ApplicationCommandInteraction
 
 from enum import Enum
 
@@ -84,6 +85,31 @@ class LogService:
         extra_params = self.add_command_params(extra_params, extras)
 
         self.requests_logger.info("REQ SLASH", extra=extra_params)
+
+    def request_slash(self, inter: ApplicationCommandInteraction, command: str, username: str, extras: dict[str, str] ):
+        extra_params = self.build_extras(command=command, username=username, guild=inter.guild)
+
+        extra_params = self.add_command_params(extra_params, extras)
+
+        self.requests_logger.info("REQ SLASH", extra=extra_params)
+
+
+    def request_prefix(self, ctx: Context, command: str, username: str, extras: str):
+        
+        extra_params = self.build_extras(
+            command=command,
+            username=username,
+        )
+
+        extra_params = self.add_command_params(extra_params, extras)
+
+        self.requests_logger.info(
+            "REQ CLASSIC",
+            extra=extra_params,
+        )
+
+        pass
+
 
     def request_classic(self, command: str, username: str, extras: str):
 

@@ -24,6 +24,7 @@ class CollageService():
         self.query_artists = "https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user={}&api_key={}&format=json&period={}&limit={}"
 
         self.imageProcessor = ImageProcessor()
+        self.log = logger
 
     async def top_list(
         self, username: str, period: str, thing: str = "albums", limit: int = 6

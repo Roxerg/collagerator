@@ -35,10 +35,10 @@ class SlashController():
         if username == "":
             username = inter.author.name
 
-        # log.request_slash(ctx, "collage", username, extras={"dimensions": dimensions, "period": period})
+        self.log.request_slash(inter, "collage", username, extras={"dimensions": dimensions, "period": period})
         re_type, response = await self.service.top_collage(username, period, dims=dimensions)
 
-        # log.response("collage", username, re_type, response)
+        self.log.response("collage", username, re_type, response)
         if re_type == BotResponseCode.ERROR or re_type == BotResponseCode.TEXT:
             await inter.edit_original_message(content=response)
         elif re_type == BotResponseCode.IMAGE:
@@ -54,14 +54,14 @@ class SlashController():
 
         count = int(count) if int(count) <= 11 else 11
 
-        # log.request_slash(
-        #     ctx,
-        #     "list",
-        #     username,
-        #     extras={"listof": listof, "period": period, "count": count},
-        # )
+        self.log.request_slash(
+            inter,
+            "list",
+            username,
+            extras={"listof": listof, "period": period, "count": count},
+        )
         re_type, response = await self.service.top_list(username, period, thing=listof, limit=count)
-        # log.response("list", username, re_type, response)
+        self.log.response("list", username, re_type, response)
 
         if re_type == BotResponseCode.ERROR or re_type == BotResponseCode.TEXT:
             await inter.edit_original_message(content=response)

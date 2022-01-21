@@ -69,14 +69,13 @@ class ImageProcessor:
 
     def get_cover(self, album: AlbumEntry, with_text=False) -> Image_t:
         # returns all black square with text if image could not be loaded
-
         no_image = False
         album_info = album[1]
 
         res = Image.new(mode="RGB", size=(174, 174), color=(0, 0, 0))
 
         try:
-            res = Image.open(BytesIO(album[0]["content"]))
+            res = Image.open(BytesIO(album[0].content))
         except:
             res = self.blank_cover()
             no_image = True
@@ -113,8 +112,8 @@ class ImageProcessor:
         return image_binary
 
         # with BytesIO() as image_binary:
-        image_binary = BytesIO()
-        final.save(image_binary, "PNG")
-        image_binary.seek(0)
+        # image_binary = BytesIO()
+        # final.save(image_binary, "PNG")
+        # image_binary.seek(0)
         # await message.channel.send(file=discord.File(fp=image_binary, filename='image.png'))
-        return 1, image_binary
+        # return 1, image_binary

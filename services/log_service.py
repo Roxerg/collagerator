@@ -26,7 +26,7 @@ class LogService:
         requests_formatter = logging.Formatter(
             "%(asctime)s | %(message)s %(guild)s %(username)s | %(command)s %(period)s %(dimensions)s %(response_code)s %(response)s %(listof)s %(count)s"
         )
-        errors_formatter = logging.Formatter("%(asctime)s | %(message)s | %(response)s")
+        errors_formatter = logging.Formatter("%(asctime)s | %(command)s %(message)s | %(response)s")
 
         requests_filehandler.setFormatter(requests_formatter)
         errors_filehandler.setFormatter(errors_formatter)
@@ -131,11 +131,11 @@ class LogService:
             extra=self.build_extras(
                 command=command,
                 username=username,
-                response_code="SUCCESS" if statuscode == 1 else "FAIL",
+                response_code="SUCCESS" if statuscode != BotResponseCode.ERROR else "FAIL",
             ),
         )
-        if statuscode != 1:
-            self.errors_logger.error("FAIL MESSAGE", extra=self.build_extras(response=response))
+        if statuscode == BotResponseCode.ERROR:
+            self.errors_logger.error("FAIL MESSAGE", extra=self.build_extras(response=response, command=command))
 
     def error(self, command, extra):
         self.errors_logger.error()

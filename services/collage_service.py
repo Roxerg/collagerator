@@ -73,7 +73,16 @@ class CollageService():
         else:
             username = username + "'s"
 
-        response = "{} top {} are:\n{}".format(username, thing, "\n".join(top_albums))
+        period_in_response = {
+            "overall": "overall",
+            "year": "of the year",
+            "1month": "this month",
+            "7day": "this week",
+            "3month": "in the past three months", 
+            "6month": "in the past six months"
+        }
+
+        response = "**{}** top {} {} are:\n\n{}".format(username, thing, period_in_response[period], "\n".join(top_albums))
         return BotResponseCode.TEXT, response
 
     async def top_collage(

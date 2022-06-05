@@ -35,13 +35,13 @@ class SlashController():
             username = inter.author.name
 
         self.log.request_slash(inter, "collage", username, extras={"dimensions": dimensions, "period": period})
-        re_type, response = await self.service.top_collage(username, period, dims=dimensions)
+        re_type, response, description = await self.service.top_collage(username, period, dims=dimensions)
 
         self.log.response("collage", username, re_type, response)
         if re_type == BotResponseCode.ERROR or re_type == BotResponseCode.TEXT:
             await inter.edit_original_message(content=response)
         elif re_type == BotResponseCode.IMAGE:
-            await inter.edit_original_message(file=disnake.File(fp=response, filename="image.png"))
+            await inter.edit_original_message(file=disnake.File(fp=response, filename="image.png"), content=description)
 
 
     async def toplist(self, inter: ApplicationCommandInteraction, username: str, period: str, listof: str, count: int):
@@ -156,9 +156,9 @@ class PrefixController():
         elif command == "tracks":
             re_type, response = await self.service.top_list(username, period, thing="tracks")
         elif command == "collage":
-            re_type, response = await self.service.top_collage(username, period)
+            re_type, response, description = await self.service.top_collage(username, period)
         elif re.match("^[0-9]x[0-9]$", command):
-            re_type, response = await self.service.top_collage(username, period, dims=command)
+            re_type, response, description = await self.service.top_collage(username, period, dims=command)
         else:
             await message.channel.send(self.error_msg())
             return
@@ -166,4 +166,5 @@ class PrefixController():
         if re_type == BotResponseCode.ERROR or re_type == BotResponseCode.TEXT:
             await message.channel.send(response)
         elif re_type == BotResponseCode.IMAGE:
+            await message.channel.send(description)
             await message.channel.send(file=disnake.File(fp=response, filename="image.png"))

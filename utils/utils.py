@@ -56,3 +56,21 @@ def get_text_info(album: list) -> TextInfo:
     except:
         pass
     return res
+
+
+def generate_top_message(username: str, thing: str, period: str) -> str:
+    if username[-1] == "s":
+        username = username + "'"
+    else:
+        username = username + "'s"
+
+    period_in_response = {
+        "overall": "overall",
+        "year": "of the year",
+        "1month": "this month",
+        "7day": "this week",
+        "3month": "in the past three months", 
+        "6month": "in the past six months"
+    }
+
+    return "**{}** top {} {} are:\n".format(username, thing, period_in_response[period])

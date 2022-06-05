@@ -13,7 +13,7 @@ from params.env_vars import FM_API_KEY
 from image_processing import ImageProcessor
 
 
-from utils.utils import duration_helper, get_meta
+from utils.utils import duration_helper, get_meta, generate_top_message
 from disnake.ext.commands import Bot
 
 class CollageService():
@@ -68,26 +68,12 @@ class CollageService():
             response = "no albums found for user {} :pensive:".format(username)
             return BotResponseCode.ERROR, response
 
-        if username[-1] == "s":
-            username = username + "'"
-        else:
-            username = username + "'s"
-
-        period_in_response = {
-            "overall": "overall",
-            "year": "of the year",
-            "1month": "this month",
-            "7day": "this week",
-            "3month": "in the past three months", 
-            "6month": "in the past six months"
-        }
-
-        response = "**{}** top {} {} are:\n\n{}".format(username, thing, period_in_response[period], "\n".join(top_albums))
+        response = generate_top_message(username, thing, period)+("\n".join(top_albums))
         return BotResponseCode.TEXT, response
 
     async def top_collage(
         self, username: str, period: str, dims: str = "3x3"
-    ) -> tuple[BotResponseCode, str] or tuple[BotResponseCode, BytesIO]:
+    ) -> tuple[BotResponseCode, str, None] or tuple[BotResponseCode, BytesIO, str]:
 
         by_x, by_y = [int(x) for x in dims.split("x")]
 
@@ -99,19 +85,19 @@ class CollageService():
             top_albums = [get_meta(album) for album in res["topalbums"]["album"]]
             if len(top_albums) != len(res["topalbums"]["album"]):
                 response = "huh i couldn't grab all the images i needed"
-                return BotResponseCode.ERROR, response
+                return BotResponseCode.ERROR, response, None
 
         except:
             response = "no albums found for user {} :pensive:".format(username)
-            return BotResponseCode.ERROR, response
+            return BotResponseCode.ERROR, response, None
 
         if len(top_albums) == 0:
             response = "no albums found for user {} :pensive:".format(username)
-            return BotResponseCode.ERROR, response
+            return BotResponseCode.ERROR, response, None
 
         if by_x * by_y > len(top_albums):
             response = "you don't have enough albums in that period for a {}x{} collage, bucko".format(by_x, by_y)
-            return BotResponseCode.ERROR, response
+            return BotResponseCode.ERROR, response, None
 
         rqs = (grequests.get(album["cover_url"]) for album in top_albums)
         responses = grequests.map(rqs)
@@ -120,4 +106,6 @@ class CollageService():
 
         image_binary = self.imageProcessor.generate_collage_binary(full_data, by_x, by_y)
 
-        return BotResponseCode.IMAGE, image_binary
+        description = generate_top_message(username, "albums", period)
+
+        return BotResponseCode.IMAGE, image_binary, description

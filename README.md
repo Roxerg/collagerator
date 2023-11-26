@@ -1,4 +1,4 @@
-![icon](images/icon.png)
+![icon](app/images/icon.png)
 
 A Discord bot that generates collages out of Last.fm listening history.
 
